@@ -1,0 +1,254 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS C:\Repositories\Disertation> dotnet new sln --name AIStaticSecurityAnalyzer
+The template "Solution File" was created successfully.
+
+PS C:\Repositories\Disertation> dotnet new console -n Analyzer.CLI
+The template "Console App" was created successfully.
+
+Processing post-creation actions...
+Restoring C:\Repositories\Disertation\Analyzer.CLI\Analyzer.CLI.csproj:
+Restore succeeded.
+
+
+PS C:\Repositories\Disertation> dotnet new classlib -n Analyzer.Core
+The template "Class Library" was created successfully.
+
+Processing post-creation actions...
+Restoring C:\Repositories\Disertation\Analyzer.Core\Analyzer.Core.csproj:
+Restore succeeded.
+
+
+PS C:\Repositories\Disertation> dotnet new classlib -n Analyzer.Roslyn
+The template "Class Library" was created successfully.
+
+Processing post-creation actions...
+Restoring C:\Repositories\Disertation\Analyzer.Roslyn\Analyzer.Roslyn.csproj:
+Restore succeeded.
+
+
+PS C:\Repositories\Disertation> dotnet new classlib -n Analyzer.CVE
+The template "Class Library" was created successfully.
+
+Processing post-creation actions...
+Restoring C:\Repositories\Disertation\Analyzer.CVE\Analyzer.CVE.csproj:
+Restore succeeded.
+
+
+PS C:\Repositories\Disertation> dotnet new classlib -n Analyzer.AI
+The template "Class Library" was created successfully.
+
+Processing post-creation actions...
+Restoring C:\Repositories\Disertation\Analyzer.AI\Analyzer.AI.csproj:
+Restore succeeded.
+
+
+PS C:\Repositories\Disertation> dotnet new classlib -n Analyzer.Reporting
+The template "Class Library" was created successfully.
+
+Processing post-creation actions...
+Restoring C:\Repositories\Disertation\Analyzer.Reporting\Analyzer.Reporting.csproj:
+Restore succeeded.
+
+
+PS C:\Repositories\Disertation> dotnet add Analyzer.CLI reference Analyzer.Core
+Reference `..\Analyzer.Core\Analyzer.Core.csproj` added to the project.
+PS C:\Repositories\Disertation> dotnet add Analyzer.CLI reference Analyzer.Roslyn
+Reference `..\Analyzer.Roslyn\Analyzer.Roslyn.csproj` added to the project.
+PS C:\Repositories\Disertation> dotnet add Analyzer.CLI reference Analyzer.CVE
+Reference `..\Analyzer.CVE\Analyzer.CVE.csproj` added to the project.
+PS C:\Repositories\Disertation> dotnet add Analyzer.CLI reference Analyzer.AI
+Reference `..\Analyzer.AI\Analyzer.AI.csproj` added to the project.
+PS C:\Repositories\Disertation> dotnet add Analyzer.CLI reference Analyzer.Reporting
+Reference `..\Analyzer.Reporting\Analyzer.Reporting.csproj` added to the project.
+PS C:\Repositories\Disertation> dotnet add Analyzer.Roslyn reference Analyzer.Core
+Reference `..\Analyzer.Core\Analyzer.Core.csproj` added to the project.
+PS C:\Repositories\Disertation> dotnet add Analyzer.Cve reference Analyzer.Core
+Reference `..\Analyzer.Core\Analyzer.Core.csproj` added to the project.
+PS C:\Repositories\Disertation> dotnet add Analyzer.AI reference Analyzer.Core
+Reference `..\Analyzer.Core\Analyzer.Core.csproj` added to the project.
+PS C:\Repositories\Disertation> dotnet add Analyzer.Reporting reference Analyzer.Core
+Reference `..\Analyzer.Core\Analyzer.Core.csproj` added to the project.
+PS C:\Repositories\Disertation> dotnet build
+Restore succeeded with 1 warning(s) in 0.1s
+    C:\Program Files\dotnet\sdk\9.0.305\NuGet.targets(186,5): warning : Unable to find a project to restore!
+
+Build succeeded with 1 warning(s) in 0.4s
+PS C:\Repositories\Disertation> dotnet build AIStaticSecurityAnalyzer.sln
+Restore succeeded with 1 warning(s) in 0.1s
+    C:\Program Files\dotnet\sdk\9.0.305\NuGet.targets(186,5): warning : Unable to find a project to restore!
+
+Build succeeded with 1 warning(s) in 0.5s
+PS C:\Repositories\Disertation> dir *.sln
+
+
+    Directory: C:\Repositories\Disertation
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----         1/13/2026  12:24 AM            441 AIStaticSecurityAnalyzer.sln
+
+
+PS C:\Repositories\Disertation> dotnet build AIStaticSecurityAnalyzer.sln
+Restore complete (12.0s)
+  Analyzer.Core succeeded (1.2s) → Analyzer.Core\bin\Debug\net9.0\Analyzer.Core.dll
+  Analyzer.Reporting succeeded (1.3s) → Analyzer.Reporting\bin\Debug\net9.0\Analyzer.Reporting.dll
+  Analyzer.Roslyn succeeded (1.4s) → Analyzer.Roslyn\bin\Debug\net9.0\Analyzer.Roslyn.dll
+  Analyzer.CVE succeeded (1.4s) → Analyzer.CVE\bin\Debug\net9.0\Analyzer.CVE.dll
+  Analyzer.AI succeeded (0.9s) → Analyzer.AI\bin\Debug\net9.0\Analyzer.AI.dll
+  Analyzer.CLI succeeded (1.4s) → Analyzer.CLI\bin\Debug\net9.0\Analyzer.CLI.dll
+
+Build succeeded in 16.1s
+PS C:\Repositories\Disertation> dotnet build AIStaticSecurityAnalyzer.sln
+Restore complete (3.6s)
+  Analyzer.Core succeeded with 1 warning(s) (8.1s) → Analyzer.Core\bin\Debug\net9.0\Analyzer.Core.dll
+    C:\Repositories\Disertation\Analyzer.Core\Models\Vulnerability.cs(15,23): warning CS8618: Non-nullable property 'CVEId' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.
+  Analyzer.AI succeeded (2.0s) → Analyzer.AI\bin\Debug\net9.0\Analyzer.AI.dll
+  Analyzer.Roslyn succeeded (2.0s) → Analyzer.Roslyn\bin\Debug\net9.0\Analyzer.Roslyn.dll
+  Analyzer.CVE succeeded (2.0s) → Analyzer.CVE\bin\Debug\net9.0\Analyzer.CVE.dll
+  Analyzer.Reporting succeeded (2.0s) → Analyzer.Reporting\bin\Debug\net9.0\Analyzer.Reporting.dll
+  Analyzer.CLI succeeded (2.6s) → Analyzer.CLI\bin\Debug\net9.0\Analyzer.CLI.dll
+
+Build succeeded with 1 warning(s) in 16.3s
+PS C:\Repositories\Disertation> dotnet add Analyzer.Roslyn package Microsoft.CodeAnalysis.CSharp
+
+Build succeeded in 3.1s
+info : X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+info : X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+info : Adding PackageReference for package 'Microsoft.CodeAnalysis.CSharp' into project 'C:\Repositories\Disertation\Analyzer.Roslyn\Analyzer.Roslyn.csproj'.
+info :   GET https://api.nuget.org/v3/registration5-gz-semver2/microsoft.codeanalysis.csharp/index.json
+info :   OK https://api.nuget.org/v3/registration5-gz-semver2/microsoft.codeanalysis.csharp/index.json 177ms
+info :   GET https://api.nuget.org/v3/registration5-gz-semver2/microsoft.codeanalysis.csharp/page/0.6.4033103-beta/3.1.0-beta2-final.json
+info :   OK https://api.nuget.org/v3/registration5-gz-semver2/microsoft.codeanalysis.csharp/page/0.6.4033103-beta/3.1.0-beta2-final.json 176ms
+info :   GET https://api.nuget.org/v3/registration5-gz-semver2/microsoft.codeanalysis.csharp/page/3.1.0-beta3-final/4.2.0-2.final.json
+info :   OK https://api.nuget.org/v3/registration5-gz-semver2/microsoft.codeanalysis.csharp/page/3.1.0-beta3-final/4.2.0-2.final.json 178ms
+info :   GET https://api.nuget.org/v3/registration5-gz-semver2/microsoft.codeanalysis.csharp/page/4.2.0-4.final/5.0.0.json
+info :   OK https://api.nuget.org/v3/registration5-gz-semver2/microsoft.codeanalysis.csharp/page/4.2.0-4.final/5.0.0.json 171ms
+info : Restoring packages for C:\Repositories\Disertation\Analyzer.Roslyn\Analyzer.Roslyn.csproj...
+info :   GET https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.csharp/index.json
+info :   OK https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.csharp/index.json 167ms
+info :   GET https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.csharp/5.0.0/microsoft.codeanalysis.csharp.5.0.0.nupkg
+info :   OK https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.csharp/5.0.0/microsoft.codeanalysis.csharp.5.0.0.nupkg 53ms
+info :   GET https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.common/index.json
+info :   GET https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.analyzers/index.json
+info :   OK https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.common/index.json 171ms
+info :   GET https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.common/5.0.0/microsoft.codeanalysis.common.5.0.0.nupkg
+info :   OK https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.common/5.0.0/microsoft.codeanalysis.common.5.0.0.nupkg 60ms
+info :   OK https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.analyzers/index.json 332ms
+info :   GET https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.analyzers/3.11.0/microsoft.codeanalysis.analyzers.3.11.0.nupkg
+info :   OK https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.analyzers/3.11.0/microsoft.codeanalysis.analyzers.3.11.0.nupkg 136ms
+info : Installed Microsoft.CodeAnalysis.Common 5.0.0 from https://api.nuget.org/v3/index.json to C:\Users\alexb\.nuget\packages\microsoft.codeanalysis.common\5.0.0 with content hash ZXRAdvH6GiDeHRyd3q/km8Z44RoM6FBWHd+gen/la81mVnAdHTEsEkO5J0TCNXBymAcx5UYKt5TvgKBhaLJEow==.
+info : Installed Microsoft.CodeAnalysis.CSharp 5.0.0 from https://api.nuget.org/v3/index.json to C:\Users\alexb\.nuget\packages\microsoft.codeanalysis.csharp\5.0.0 with content hash 5DSyJ9bk+ATuDy7fp2Zt0mJStDVKbBoiz1DyfAwSa+k4H4IwykAUcV3URelw5b8/iVbfSaOwkwmPUZH6opZKCw==.
+info : Installed Microsoft.CodeAnalysis.Analyzers 3.11.0 from https://api.nuget.org/v3/index.json to C:\Users\alexb\.nuget\packages\microsoft.codeanalysis.analyzers\3.11.0 with content hash v/EW3UE8/lbEYHoC2Qq7AR/DnmvpgdtAMndfQNmpuIMx/Mto8L5JnuCfdBYtgvalQOtfNCnxFejxuRrryvUTsg==.
+info :   GET https://api.nuget.org/v3/vulnerabilities/index.json
+info :   OK https://api.nuget.org/v3/vulnerabilities/index.json 43ms
+info :   GET https://api.nuget.org/v3-vulnerabilities/2026.01.03.11.41.01/vulnerability.base.json
+info :   GET https://api.nuget.org/v3-vulnerabilities/2026.01.03.11.41.01/2026.01.14.11.41.55/vulnerability.update.json
+info :   OK https://api.nuget.org/v3-vulnerabilities/2026.01.03.11.41.01/2026.01.14.11.41.55/vulnerability.update.json 41ms
+info :   OK https://api.nuget.org/v3-vulnerabilities/2026.01.03.11.41.01/vulnerability.base.json 51ms
+info : Package 'Microsoft.CodeAnalysis.CSharp' is compatible with all the specified frameworks in project 'C:\Repositories\Disertation\Analyzer.Roslyn\Analyzer.Roslyn.csproj'.
+info : PackageReference for package 'Microsoft.CodeAnalysis.CSharp' version '5.0.0' added to file 'C:\Repositories\Disertation\Analyzer.Roslyn\Analyzer.Roslyn.csproj'.
+info : Generating MSBuild file C:\Repositories\Disertation\Analyzer.Roslyn\obj\Analyzer.Roslyn.csproj.nuget.g.props.
+info : Generating MSBuild file C:\Repositories\Disertation\Analyzer.Roslyn\obj\Analyzer.Roslyn.csproj.nuget.g.targets.
+info : Writing assets file to disk. Path: C:\Repositories\Disertation\Analyzer.Roslyn\obj\project.assets.json
+log  : Restored C:\Repositories\Disertation\Analyzer.Roslyn\Analyzer.Roslyn.csproj (in 10.16 sec).
+PS C:\Repositories\Disertation> dotnet run --project Analyzer.CLI --"TempForTests"
+C:\Repositories\Disertation\Analyzer.Roslyn\Analyzer.Roslyn.csproj(11,3): error MSB4067: The element <#text> beneath element <PropertyGroup> is unrecognized.
+
+The build failed. Fix the build errors and run again.
+PS C:\Repositories\Disertation> dotnet run --project Analyzer.CLI --"TempForTests"
+AI Static Security Analyzer - CLI!
+Unhandled exception. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Repositories\Disertation\--TempForTests'.
+   at System.IO.Enumeration.FileSystemEnumerator`1.CreateDirectoryHandle(String path, Boolean ignoreNotFound)
+   at System.IO.Enumeration.FileSystemEnumerator`1.Init()
+   at System.IO.Enumeration.FileSystemEnumerable`1..ctor(String directory, FindTransform transform, EnumerationOptions options, Boolean isNormalized)
+   at System.IO.Enumeration.FileSystemEnumerableFactory.UserFiles(String directory, String expression, EnumerationOptions options)
+   at System.IO.Directory.InternalEnumeratePaths(String path, String searchPattern, SearchTarget searchTarget, EnumerationOptions options)
+   at System.IO.Directory.GetFiles(String path, String searchPattern, EnumerationOptions enumerationOptions)
+   at Analyzer.Roslyn.RoslynCodeAnalyzer.AnalyzeDirectory(String path) in C:\Repositories\Disertation\Analyzer.Roslyn\RoslynCodeAnalyzer.cs:line 23
+   at Program.<Main>$(String[] args) in C:\Repositories\Disertation\Analyzer.CLI\Program.cs:line 15
+PS C:\Repositories\Disertation> dotnet run --project Analyzer.CLI --"C:\Repositories\Disertation\TempForTests"
+AI Static Security Analyzer - CLI!
+Unhandled exception. System.IO.IOException: The filename, directory name, or volume label syntax is incorrect. : 'C:\Repositories\Disertation\--C:\Repositories\Disertation\TempForTests'.
+   at System.IO.Enumeration.FileSystemEnumerator`1.CreateDirectoryHandle(String path, Boolean ignoreNotFound)
+   at System.IO.Enumeration.FileSystemEnumerator`1.Init()
+   at System.IO.Enumeration.FileSystemEnumerable`1..ctor(String directory, FindTransform transform, EnumerationOptions options, Boolean isNormalized)
+   at System.IO.Enumeration.FileSystemEnumerableFactory.UserFiles(String directory, String expression, EnumerationOptions options)
+   at System.IO.Directory.InternalEnumeratePaths(String path, String searchPattern, SearchTarget searchTarget, EnumerationOptions options)
+   at System.IO.Directory.GetFiles(String path, String searchPattern, EnumerationOptions enumerationOptions)
+   at Analyzer.Roslyn.RoslynCodeAnalyzer.AnalyzeDirectory(String path) in C:\Repositories\Disertation\Analyzer.Roslyn\RoslynCodeAnalyzer.cs:line 23
+   at Program.<Main>$(String[] args) in C:\Repositories\Disertation\Analyzer.CLI\Program.cs:line 15
+PS C:\Repositories\Disertation> dotnet run --project Analyzer.CLI --C:\Repositories\Disertation\TempForTests
+AI Static Security Analyzer - CLI!
+Unhandled exception. System.IO.IOException: The filename, directory name, or volume label syntax is incorrect. : 'C:\Repositories\Disertation\--C:\Repositories\Disertation\TempForTests'.
+   at System.IO.Enumeration.FileSystemEnumerator`1.CreateDirectoryHandle(String path, Boolean ignoreNotFound)
+   at System.IO.Enumeration.FileSystemEnumerator`1.Init()
+   at System.IO.Enumeration.FileSystemEnumerable`1..ctor(String directory, FindTransform transform, EnumerationOptions options, Boolean isNormalized)
+   at System.IO.Enumeration.FileSystemEnumerableFactory.UserFiles(String directory, String expression, EnumerationOptions options)
+   at System.IO.Directory.InternalEnumeratePaths(String path, String searchPattern, SearchTarget searchTarget, EnumerationOptions options)
+   at System.IO.Directory.GetFiles(String path, String searchPattern, EnumerationOptions enumerationOptions)
+   at Analyzer.Roslyn.RoslynCodeAnalyzer.AnalyzeDirectory(String path) in C:\Repositories\Disertation\Analyzer.Roslyn\RoslynCodeAnalyzer.cs:line 23
+   at Program.<Main>$(String[] args) in C:\Repositories\Disertation\Analyzer.CLI\Program.cs:line 15
+PS C:\Repositories\Disertation> dotnet run --project Analyzer.CLI --\TempForTests
+AI Static Security Analyzer - CLI!
+Unhandled exception. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Repositories\Disertation\--\TempForTests'.
+   at System.IO.Enumeration.FileSystemEnumerator`1.CreateDirectoryHandle(String path, Boolean ignoreNotFound)
+   at System.IO.Enumeration.FileSystemEnumerator`1.Init()
+   at System.IO.Enumeration.FileSystemEnumerable`1..ctor(String directory, FindTransform transform, EnumerationOptions options, Boolean isNormalized)
+   at System.IO.Enumeration.FileSystemEnumerableFactory.UserFiles(String directory, String expression, EnumerationOptions options)
+   at System.IO.Directory.InternalEnumeratePaths(String path, String searchPattern, SearchTarget searchTarget, EnumerationOptions options)
+   at System.IO.Directory.GetFiles(String path, String searchPattern, EnumerationOptions enumerationOptions)
+   at Analyzer.Roslyn.RoslynCodeAnalyzer.AnalyzeDirectory(String path) in C:\Repositories\Disertation\Analyzer.Roslyn\RoslynCodeAnalyzer.cs:line 23
+   at Program.<Main>$(String[] args) in C:\Repositories\Disertation\Analyzer.CLI\Program.cs:line 15
+PS C:\Repositories\Disertation> dotnet run --project Analyzer.CLI --"\TempForTests"
+AI Static Security Analyzer - CLI!
+Unhandled exception. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\Repositories\Disertation\--\TempForTests'.
+   at System.IO.Enumeration.FileSystemEnumerator`1.CreateDirectoryHandle(String path, Boolean ignoreNotFound)
+   at System.IO.Enumeration.FileSystemEnumerator`1.Init()
+   at System.IO.Enumeration.FileSystemEnumerable`1..ctor(String directory, FindTransform transform, EnumerationOptions options, Boolean isNormalized)
+   at System.IO.Enumeration.FileSystemEnumerableFactory.UserFiles(String directory, String expression, EnumerationOptions options)
+   at System.IO.Directory.InternalEnumeratePaths(String path, String searchPattern, SearchTarget searchTarget, EnumerationOptions options)
+   at System.IO.Directory.GetFiles(String path, String searchPattern, EnumerationOptions enumerationOptions)
+   at Analyzer.Roslyn.RoslynCodeAnalyzer.AnalyzeDirectory(String path) in C:\Repositories\Disertation\Analyzer.Roslyn\RoslynCodeAnalyzer.cs:line 23
+   at Program.<Main>$(String[] args) in C:\Repositories\Disertation\Analyzer.CLI\Program.cs:line 15
+PS C:\Repositories\Disertation> dotnet run --project Analyzer.CLI \TempForTests
+AI Static Security Analyzer - CLI!
+Unhandled exception. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\TempForTests'.
+   at System.IO.Enumeration.FileSystemEnumerator`1.CreateDirectoryHandle(String path, Boolean ignoreNotFound)
+   at System.IO.Enumeration.FileSystemEnumerator`1.Init()
+   at System.IO.Enumeration.FileSystemEnumerable`1..ctor(String directory, FindTransform transform, EnumerationOptions options, Boolean isNormalized)
+   at System.IO.Enumeration.FileSystemEnumerableFactory.UserFiles(String directory, String expression, EnumerationOptions options)
+   at System.IO.Directory.InternalEnumeratePaths(String path, String searchPattern, SearchTarget searchTarget, EnumerationOptions options)
+   at System.IO.Directory.GetFiles(String path, String searchPattern, EnumerationOptions enumerationOptions)
+   at Analyzer.Roslyn.RoslynCodeAnalyzer.AnalyzeDirectory(String path) in C:\Repositories\Disertation\Analyzer.Roslyn\RoslynCodeAnalyzer.cs:line 23
+   at Program.<Main>$(String[] args) in C:\Repositories\Disertation\Analyzer.CLI\Program.cs:line 15
+PS C:\Repositories\Disertation> dotnet run --project Analyzer.CLI "\TempForTests"
+AI Static Security Analyzer - CLI!
+Unhandled exception. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\TempForTests'.
+   at System.IO.Enumeration.FileSystemEnumerator`1.CreateDirectoryHandle(String path, Boolean ignoreNotFound)
+   at System.IO.Enumeration.FileSystemEnumerator`1.Init()
+   at System.IO.Enumeration.FileSystemEnumerable`1..ctor(String directory, FindTransform transform, EnumerationOptions options, Boolean isNormalized)
+   at System.IO.Enumeration.FileSystemEnumerableFactory.UserFiles(String directory, String expression, EnumerationOptions options)
+   at System.IO.Directory.InternalEnumeratePaths(String path, String searchPattern, SearchTarget searchTarget, EnumerationOptions options)
+   at System.IO.Directory.GetFiles(String path, String searchPattern, EnumerationOptions enumerationOptions)
+   at Analyzer.Roslyn.RoslynCodeAnalyzer.AnalyzeDirectory(String path) in C:\Repositories\Disertation\Analyzer.Roslyn\RoslynCodeAnalyzer.cs:line 23
+   at Program.<Main>$(String[] args) in C:\Repositories\Disertation\Analyzer.CLI\Program.cs:line 15
+PS C:\Repositories\Disertation> dotnet run --project Analyzer.CLI -- \TempForTests
+AI Static Security Analyzer - CLI!
+Unhandled exception. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\TempForTests'.
+   at System.IO.Enumeration.FileSystemEnumerator`1.CreateDirectoryHandle(String path, Boolean ignoreNotFound)
+   at System.IO.Enumeration.FileSystemEnumerator`1.Init()
+   at System.IO.Enumeration.FileSystemEnumerable`1..ctor(String directory, FindTransform transform, EnumerationOptions options, Boolean isNormalized)
+   at System.IO.Enumeration.FileSystemEnumerableFactory.UserFiles(String directory, String expression, EnumerationOptions options)
+   at System.IO.Directory.InternalEnumeratePaths(String path, String searchPattern, SearchTarget searchTarget, EnumerationOptions options)
+   at System.IO.Directory.GetFiles(String path, String searchPattern, EnumerationOptions enumerationOptions)
+   at Analyzer.Roslyn.RoslynCodeAnalyzer.AnalyzeDirectory(String path) in C:\Repositories\Disertation\Analyzer.Roslyn\RoslynCodeAnalyzer.cs:line 23
+   at Program.<Main>$(String[] args) in C:\Repositories\Disertation\Analyzer.CLI\Program.cs:line 15
+PS C:\Repositories\Disertation> dotnet run --project Analyzer.CLI -- "C:\Repositories\Disertation\TempForTests"
+AI Static Security Analyzer - CLI!
+[High]Use of weak cryptographic hashing algorithm at C:\Repositories\Disertation\TempForTests\Test.cs : 9
+PS C:\Repositories\Disertation>
