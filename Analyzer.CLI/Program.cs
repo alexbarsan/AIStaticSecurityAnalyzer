@@ -15,6 +15,6 @@ var analyzer = new RoslynCodeAnalyzer();
 var findings = analyzer.AnalyzeDirectory(path);
 foreach (var finding in findings)
 {
-    Console.WriteLine($"[{finding.Vulnerability.Severity}]{finding.Vulnerability.Name} at {finding.FilePath} : {finding.Line}");
+    Console.WriteLine($"[{finding.Vulnerability.Severity}] {finding.Vulnerability.Name} at {finding.FilePath} : {finding.Line}");
 }
 Environment.Exit(findings.Any(f => f.Vulnerability.Severity >= Severity.High) ? 2 : 0);

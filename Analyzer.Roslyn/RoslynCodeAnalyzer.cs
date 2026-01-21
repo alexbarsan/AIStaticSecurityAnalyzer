@@ -1,11 +1,6 @@
 ﻿using Analyzer.Core.Interfaces;
 using Analyzer.Core.Models;
 using Analyzer.Roslyn.Rules;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Analyzer.Roslyn
 {
@@ -14,7 +9,8 @@ namespace Analyzer.Roslyn
         const string CSharpFilePattern = "*.cs";
         private readonly List<IRule> _rules = new()
         {
-            new WeakHashingRule()
+            new WeakHashingRule(),
+            new HardCodedSecretRule()
         };
         public IReadOnlyCollection<Finding> AnalyzeDirectory(string path)
         {
