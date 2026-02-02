@@ -1,9 +1,9 @@
 {
-  "GeneratedAt": "2026-01-26T23:06:13.4617809Z",
+  "GeneratedAt": "2026-02-02T21:17:20.9713449Z",
   "ProjectPath": "C:\\Repositories\\Disertation\\TempForTests",
   "Summary": {
-    "TotalFindings": 2,
-    "Critical": 1,
+    "TotalFindings": 3,
+    "Critical": 2,
     "High": 1,
     "Medium": 0,
     "Low": 0,
@@ -21,7 +21,7 @@
         "Recommandation": "Use SHA-256 or stronger hashing algorithms."
       },
       "FilePath": "C:\\Repositories\\Disertation\\TempForTests\\Test.cs",
-      "Line": 12,
+      "Line": 16,
       "Column": 19,
       "CodeSnippet": "MD5.Create()",
       "Confidence": 1
@@ -37,9 +37,25 @@
         "Recommandation": "Store secrets in Vaults, secure configuration systems or environment variables!"
       },
       "FilePath": "C:\\Repositories\\Disertation\\TempForTests\\Test.cs",
-      "Line": 10,
+      "Line": 14,
       "Column": 24,
       "CodeSnippet": "password = \u0022superMarioa123\u0022",
+      "Confidence": 1
+    },
+    {
+      "Vulnerability": {
+        "Id": "VULN-HARDCODED-SECRET",
+        "Name": "Hardcoded secret in source code",
+        "Description": "Sensitive information: passwords, API keys or tokens are stored in the environment variables!",
+        "CWEId": "CWE-798",
+        "CVEId": null,
+        "Severity": 4,
+        "Recommandation": "Store secrets in Vaults, secure configuration systems or environment variables!"
+      },
+      "FilePath": "C:\\Repositories\\Disertation\\TempForTests\\Test.cs",
+      "Line": 9,
+      "Column": 36,
+      "CodeSnippet": "public string Token { get; } = \u0022JhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc.123\u0022;",
       "Confidence": 1
     }
   ]

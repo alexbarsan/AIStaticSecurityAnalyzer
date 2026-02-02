@@ -28,27 +28,31 @@ namespace Analyzer.Roslyn.Rules
 
         public IEnumerable<Finding> AnalyzeWithSemanticModel(SyntaxNode root, SemanticModel semanticModel, string filePath)
         {
-            var invocations = root?.DescendantNodes().OfType<InvocationExpressionSyntax>();
-            foreach (var invocation in invocations) {
-                var symbolInfo = semanticModel.GetSymbolInfo(invocation);
-                var methodSymbol = symbolInfo.Symbol as IMethodSymbol;
-
-                if (methodSymbol == null) continue;
-                
-                var containingType = methodSymbol.ContainingType.ToString();
-                if (containingType.Contains(MD5) || containingType.Contains(SHA1))
+            var invocations = root?.DescendantNodes()?.OfType<InvocationExpressionSyntax>();
+            if (invocations != null)
+            {
+                foreach (var invocation in invocations)
                 {
-                    var location = invocation.GetLocation().GetLineSpan();
-                    yield return new Finding
+                    var symbolInfo = semanticModel.GetSymbolInfo(invocation);
+                    var methodSymbol = symbolInfo.Symbol as IMethodSymbol;
+
+                    if (methodSymbol == null) continue;
+
+                    var containingType = methodSymbol?.ContainingType?.ToString();
+                    if (containingType !=null && (containingType.Contains(MD5) || containingType.Contains(SHA1)))
                     {
-                        Vulnerability = Vulnerability,
-                        FilePath = filePath,
-                        Line = location.StartLinePosition.Line + 1,
-                        Column = location.StartLinePosition.Character + 1,
-                        CodeSnippet = invocation.ToString()
-                    };
+                        var location = invocation.GetLocation().GetLineSpan();
+                        yield return new Finding
+                        {
+                            Vulnerability = Vulnerability,
+                            FilePath = filePath,
+                            Line = location.StartLinePosition.Line + 1,
+                            Column = location.StartLinePosition.Character + 1,
+                            CodeSnippet = invocation.ToString()
+                        };
+                    }
                 }
-            }            
+            }
         }
     }
 }
