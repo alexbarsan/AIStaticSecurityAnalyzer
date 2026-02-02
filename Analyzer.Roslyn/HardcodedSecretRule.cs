@@ -20,22 +20,24 @@ public class HardCodedSecretRule : IRule
         Recommandation = "Store secrets in Vaults, secure configuration systems or environment variables!"
     };
 
-    private static readonly string[] SensitiveInformation = { "password", "pwd", "secret", "token", "apiKey", "api_key", "key" };
+    private static readonly string[] SensitiveInformation = { "password", "pwd", "secret", "token", "apiKey", "api_key" };
 
-    public IEnumerable<Finding> Analyze(string sourceCode, string filePath)
+    public IEnumerable<Finding> AnalyzeWithSemanticModel(SyntaxNode root, SemanticModel semanticModel, string filePath)
     {
-        var tree = CSharpSyntaxTree.ParseText(sourceCode);
-        var root = tree.GetRoot();
+
         var variables = root.DescendantNodes().OfType<VariableDeclaratorSyntax>();
         foreach (var variable in variables)
         {
-            var name = variable.Identifier.Text.ToLower();
-            if(!SensitiveInformation.Any(x => name.Contains(x))) continue;
-            if(variable.Initializer?.Value is LiteralExpressionSyntax literal && literal.IsKind(SyntaxKind.StringLiteralExpression))
+            var symbolInfo = semanticModel.GetDeclaredSymbol(variable) as ILocalSymbol;
+            if (symbolInfo == null) continue;
+            var name = symbolInfo.Name.ToLower();
+            if (!SensitiveInformation.Any(s => name.Contains(s))) continue;
+
+            if(variable.Initializer?.Value is LiteralExpressionSyntax literal)
             {
                 var value = literal.Token.ValueText;
                 //simple heurirstic; maybe I will change it later => ignore very small strings
-                if (value.Length < 6) continue;
+                if (value.Length < 8) continue;
 
                 var location = literal.GetLocation().GetLineSpan();
                 yield return new Finding

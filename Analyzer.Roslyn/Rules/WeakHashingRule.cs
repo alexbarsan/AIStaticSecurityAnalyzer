@@ -1,5 +1,6 @@
 ﻿using Analyzer.Core.Interfaces;
 using Analyzer.Core.Models;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -13,8 +14,8 @@ namespace Analyzer.Roslyn.Rules
     public class WeakHashingRule : IRule
     {
         public string Id => "RULE-CRYPTO-001";
-        const string MD5 = "MD5";
-        const string SHA1 = "SHA1";
+        const string MD5 = "System.Security.Cryptography.MD5";
+        const string SHA1 = "System.Security.Cryptography.SHA1";
         public Vulnerability Vulnerability { get; } = new()
         {
             Id = "VULN-WEAK-HASHING",
@@ -25,15 +26,18 @@ namespace Analyzer.Roslyn.Rules
             Recommandation = "Use SHA-256 or stronger hashing algorithms."
         };
 
-        public IEnumerable<Finding> Analyze(string sourceCode, string filePath)
+        public IEnumerable<Finding> AnalyzeWithSemanticModel(SyntaxNode root, SemanticModel semanticModel, string filePath)
         {
-            var syntaxTree = CSharpSyntaxTree.ParseText(sourceCode);
-            var root = syntaxTree.GetRoot();
-            var invocations = root.DescendantNodes().OfType<InvocationExpressionSyntax>();
-            foreach (var invocation in invocations) { 
-                var expression = invocation.Expression.ToString();
-                if (expression.Contains(MD5) || expression.Contains(SHA1))
-                { 
+            var invocations = root?.DescendantNodes().OfType<InvocationExpressionSyntax>();
+            foreach (var invocation in invocations) {
+                var symbolInfo = semanticModel.GetSymbolInfo(invocation);
+                var methodSymbol = symbolInfo.Symbol as IMethodSymbol;
+
+                if (methodSymbol == null) continue;
+                
+                var containingType = methodSymbol.ContainingType.ToString();
+                if (containingType.Contains(MD5) || containingType.Contains(SHA1))
+                {
                     var location = invocation.GetLocation().GetLineSpan();
                     yield return new Finding
                     {
@@ -44,7 +48,7 @@ namespace Analyzer.Roslyn.Rules
                         CodeSnippet = invocation.ToString()
                     };
                 }
-            }
+            }            
         }
     }
 }

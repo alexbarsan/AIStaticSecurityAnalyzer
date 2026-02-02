@@ -1,9 +1,5 @@
 ﻿using Analyzer.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 
 namespace Analyzer.Core.Interfaces
 {
@@ -11,6 +7,6 @@ namespace Analyzer.Core.Interfaces
     {
         string Id { get; }
         Vulnerability Vulnerability { get; }
-        IEnumerable<Finding> Analyze(string sourceCode, string filePath);
+        IEnumerable<Finding> AnalyzeWithSemanticModel(SyntaxNode root, SemanticModel semanticModel, string filePath);
     }
 }

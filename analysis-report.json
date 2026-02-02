@@ -1,0 +1,46 @@
+{
+  "GeneratedAt": "2026-01-26T23:06:13.4617809Z",
+  "ProjectPath": "C:\\Repositories\\Disertation\\TempForTests",
+  "Summary": {
+    "TotalFindings": 2,
+    "Critical": 1,
+    "High": 1,
+    "Medium": 0,
+    "Low": 0,
+    "Info": 0
+  },
+  "Findings": [
+    {
+      "Vulnerability": {
+        "Id": "VULN-WEAK-HASHING",
+        "Name": "Use of weak cryptographic hashing algorithm",
+        "Description": "The application uses MD5 or SHA1 which are considered cryptographically broken.",
+        "CWEId": "CWE-327",
+        "CVEId": null,
+        "Severity": 3,
+        "Recommandation": "Use SHA-256 or stronger hashing algorithms."
+      },
+      "FilePath": "C:\\Repositories\\Disertation\\TempForTests\\Test.cs",
+      "Line": 12,
+      "Column": 19,
+      "CodeSnippet": "MD5.Create()",
+      "Confidence": 1
+    },
+    {
+      "Vulnerability": {
+        "Id": "VULN-HARDCODED-SECRET",
+        "Name": "Hardcoded secret in source code",
+        "Description": "Sensitive information: passwords, API keys or tokens are stored in the environment variables!",
+        "CWEId": "CWE-798",
+        "CVEId": null,
+        "Severity": 4,
+        "Recommandation": "Store secrets in Vaults, secure configuration systems or environment variables!"
+      },
+      "FilePath": "C:\\Repositories\\Disertation\\TempForTests\\Test.cs",
+      "Line": 10,
+      "Column": 24,
+      "CodeSnippet": "password = \u0022superMarioa123\u0022",
+      "Confidence": 1
+    }
+  ]
+}
