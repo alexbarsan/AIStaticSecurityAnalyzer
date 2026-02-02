@@ -14,6 +14,10 @@ namespace Analyzer.Core.Models
         public int Column { get; init; }
         public string CodeSnippet { get; init; } = string.Empty;
         public double Confidence { get; set; } = 1.0; //default value, may be adjusted by AI later => to reduce false positive
-        
+        public string? CveId { get; set; }
+        public double? CvssBaseScore { get; set; }
+        public string? CvssSeverity { get; set; }
+
+
     }
 }
