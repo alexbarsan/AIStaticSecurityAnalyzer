@@ -1,35 +1,66 @@
-﻿// See https://aka.ms/new-console-template for more information
-using Analyzer.Core.Models;
+﻿using Analyzer.Core.Models;
 using Analyzer.Reporting;
 using Analyzer.Roslyn;
 
-Console.WriteLine("AI Static Security Analyzer - CLI!");
+Console.WriteLine("AI Static Security Analyzer");
 
-var jsonParam = "--json";
-if(args.Length == 0)
+// Usage:
+// analyzer <path> [--json] [--fail-on <info|low|medium|high|critical>]
+if (args.Length == 0)
 {
-    Console.WriteLine($"Usage: analyzer <path> [{jsonParam}]");
+    PrintUsage();
     return;
 }
 
 var path = args[0];
-var exportJson = args.Contains(jsonParam);
+var exportJson = args.Contains("--json");
+var failOn = ParseFailOn(args) ?? Severity.High;
+
 var analyzer = new RoslynCodeAnalyzer();
 var findings = analyzer.AnalyzeDirectory(path);
+
 foreach (var finding in findings)
 {
-    Console.WriteLine($"[{finding.Vulnerability.Severity}] {finding.Vulnerability.Name} at {finding.FilePath} : {finding.Line}");
+    Console.WriteLine(
+        $"[{finding.Vulnerability.Severity}] {finding.Vulnerability.Name} " +
+        $"at {finding.FilePath}:{finding.Line}");
 }
 
 if (exportJson)
 {
-    var reportName = "analysis-report.json";
     var writer = new JsonReportWriter();
-    writer.Write(reportName, path, findings);
-    Console.WriteLine($"JSON report written to {reportName}");
+    writer.Write("analysis-report.json", path, findings);
+    Console.WriteLine("JSON report written to analysis-report.json");
 }
 
-//CI/CD logic
-var maxSeverity = findings.Any() ? findings.Max(f => f.Vulnerability.Severity) : Severity.Info;
+// CI/CD decision
+var maxSeverity = findings.Any()
+    ? findings.Max(f => f.Vulnerability.Severity)
+    : Severity.Info;
 
-Environment.Exit(maxSeverity >= Severity.High ? 2 : 0);
+var exitCode = maxSeverity >= failOn ? 2 : 0;
+Environment.Exit(exitCode);
+
+static void PrintUsage()
+{
+    Console.WriteLine("Usage: analyzer <path> [--json] [--fail-on <info|low|medium|high|critical>]");
+    Console.WriteLine("Example: analyzer ./src --json --fail-on high");
+}
+
+static Severity? ParseFailOn(string[] args)
+{
+    var idx = Array.FindIndex(args, a => a.Equals("--fail-on", StringComparison.OrdinalIgnoreCase));
+    if (idx < 0 || idx + 1 >= args.Length)
+        return null;
+
+    var raw = args[idx + 1].Trim().ToLowerInvariant();
+    return raw switch
+    {
+        "info" => Severity.Info,
+        "low" => Severity.Low,
+        "medium" => Severity.Medium,
+        "high" => Severity.High,
+        "critical" => Severity.Critical,
+        _ => throw new ArgumentException("Invalid --fail-on value. Use: info|low|medium|high|critical")
+    };
+}
