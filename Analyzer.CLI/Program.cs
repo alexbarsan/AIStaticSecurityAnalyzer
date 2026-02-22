@@ -40,6 +40,8 @@ if (mode == "sync-nvd")
     return;
 }
 
+string modelPath = "ai-model.zip";
+
 if (mode == "train-ai")
 {
     var csvPath = Path.GetFullPath(Path.Combine(
@@ -52,9 +54,9 @@ if (mode == "train-ai")
     }
     TrainModel.Train(
         csvPath,
-        modelPath: "ai-model.zip");
+        modelPath: modelPath);
 
-    Console.WriteLine("AI model saved to ai-model.zip");
+    Console.WriteLine($"AI model saved to {modelPath}");
     return;
 }
 
@@ -66,7 +68,7 @@ var useAi = args.Contains("--ai");
 var failOn = ParseFailOn(args) ?? Severity.High;
 
 var analyzer = new RoslynCodeAnalyzer();
-var findings = analyzer.AnalyzeDirectory(path);
+var findings = analyzer.AnalyzeDirectory(path).ToList();
 
 // Enrich findings (best-effort)
 DbInitializer.EnsureCreated(dbPath);
@@ -82,9 +84,46 @@ foreach (var finding in findings)
 if (useAi)
 {
     var scorer = new Analyzer.AI.AiScorer();
-    scorer.LoadModel("ai-model.zip");
+    scorer.LoadModel(modelPath);
     scorer.ScoreFindings(findings);
 }
+var minConfidence = ParseDoubleArg(args, "--min-confidence") ?? 0.0;
+
+if (useAi && minConfidence > 0.0)
+{
+    findings = findings
+        .Where(f => f.Confidence >= minConfidence)
+        .ToList();
+}
+
+var exportTrainingPath = ParseStringArg(args, "--export-training");
+if (!string.IsNullOrWhiteSpace(exportTrainingPath))
+{
+    string finalPath;
+
+    if (Path.IsPathRooted(exportTrainingPath))
+    {
+        finalPath = exportTrainingPath;
+    }
+    else
+    {
+        var trainingDir = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "Analyzer.AI",
+            "Training");
+
+        Directory.CreateDirectory(trainingDir);
+
+        finalPath = Path.Combine(trainingDir, exportTrainingPath);
+    }
+
+    var exporter = new Analyzer.Reporting.CsvTrainingExporter();
+    exporter.Append(finalPath, findings);
+
+    Console.WriteLine($"Training data exported to {finalPath}");
+}
+
+
 
 if (exportJson)
 {
@@ -104,11 +143,20 @@ static int? ParseIntArg(string[] args, string name)
     return int.TryParse(args[idx + 1], out var v) ? v : null;
 }
 
-static void PrintUsage()
+static double? ParseDoubleArg(string[] args, string name)
 {
-    Console.WriteLine("Usage:");
-    Console.WriteLine("  analyzer <path> [--json] [--fail-on <info|low|medium|high|critical>]");
-    Console.WriteLine("  analyzer sync-nvd --days <n>");
+    var idx = Array.FindIndex(args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
+    if (idx < 0 || idx + 1 >= args.Length) return null;
+
+    return double.TryParse(args[idx + 1], out var v) ? v : null;
+}
+
+static string? ParseStringArg(string[] args, string name)
+{
+    var idx = Array.FindIndex(args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
+    if (idx < 0 || idx + 1 >= args.Length) return null;
+
+    return args[idx + 1];
 }
 
 static Severity? ParseFailOn(string[] args)
@@ -125,4 +173,13 @@ static Severity? ParseFailOn(string[] args)
         "critical" => Severity.Critical,
         _ => throw new ArgumentException("Invalid --fail-on value. Use: info|low|medium|high|critical")
     };
+}
+
+static void PrintUsage()
+{
+    Console.WriteLine("Usage:");
+    Console.WriteLine("  analyzer <path> [--json] [--fail-on <info|low|medium|high|critical>]");
+    Console.WriteLine("  analyzer sync-nvd --days <n>");
+    Console.WriteLine("  --ai --min-confidence <0..1>   Enables AI scoring and filters low-confidence findings");
+    Console.WriteLine("  --export-training <file.csv>   Export findings as ML training candidates");
 }

@@ -4,7 +4,7 @@ namespace Analyzer.Core;
 
 public class Test
 {
-    private string apiKey = "https://localhost:5001"; // should NOT be flagged now
+    private string apiKey2 = "https://localhost:5001"; // should NOT be flagged now
 
     public string Token { get; } = "JhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc.123";
 
