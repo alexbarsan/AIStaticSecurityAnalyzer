@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Analyzer.CLI": {
+      "commandName": "Project",
+      "commandLineArgs": "train-ai"
+    }
+  }
+}

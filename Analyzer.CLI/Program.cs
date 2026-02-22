@@ -4,6 +4,8 @@ using Analyzer.CVE.Nvd;
 using Analyzer.CVE.Storage;
 using Analyzer.Reporting;
 using Analyzer.Roslyn;
+using Analyzer.AI.Training;
+
 
 Console.WriteLine("AI Static Security Analyzer");
 
@@ -38,9 +40,29 @@ if (mode == "sync-nvd")
     return;
 }
 
+if (mode == "train-ai")
+{
+    var csvPath = Path.GetFullPath(Path.Combine(
+    AppContext.BaseDirectory, "..", "..", "..", "..", "Analyzer.AI", "Training", "training-data.csv"));
+
+    if (!File.Exists(csvPath))
+    {
+        Console.WriteLine($"Training CSV not found: {csvPath}");
+        return;
+    }
+    TrainModel.Train(
+        csvPath,
+        modelPath: "ai-model.zip");
+
+    Console.WriteLine("AI model saved to ai-model.zip");
+    return;
+}
+
 // default: scan
 var path = args[0];
 var exportJson = args.Contains("--json");
+var useAi = args.Contains("--ai");
+
 var failOn = ParseFailOn(args) ?? Severity.High;
 
 var analyzer = new RoslynCodeAnalyzer();
@@ -54,7 +76,14 @@ enricher.Enrich(findings);
 foreach (var finding in findings)
 {
     var cveText = string.IsNullOrWhiteSpace(finding.CveId) ? "" : $" ({finding.CveId}, CVSS {finding.CvssBaseScore?.ToString("0.0") ?? "?"})";
-    Console.WriteLine($"[{finding.Vulnerability.Severity}] {finding.Vulnerability.Name}{cveText} at {finding.FilePath}:{finding.Line}");
+    Console.WriteLine($"[{finding.Vulnerability.Severity}] {finding.Vulnerability.Name} (conf {finding.Confidence:0.00}) {cveText} at {finding.FilePath}:{finding.Line}");
+}
+
+if (useAi)
+{
+    var scorer = new Analyzer.AI.AiScorer();
+    scorer.LoadModel("ai-model.zip");
+    scorer.ScoreFindings(findings);
 }
 
 if (exportJson)
@@ -64,7 +93,8 @@ if (exportJson)
     Console.WriteLine("JSON report written to analysis-report.json");
 }
 
-var maxSeverity = findings.Any() ? findings.Max(f => f.Vulnerability.Severity) : Severity.Info;
+
+var maxSeverity = findings.Count != 0 ? findings.Max(f => f.Vulnerability.Severity) : Severity.Info;
 Environment.Exit(maxSeverity >= failOn ? 2 : 0);
 
 static int? ParseIntArg(string[] args, string name)
