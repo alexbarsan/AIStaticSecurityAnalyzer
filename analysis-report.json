@@ -1,5 +1,5 @@
 {
-  "GeneratedAt": "2026-02-22T12:15:11.3729254Z",
+  "GeneratedAt": "2026-03-01T12:07:32.2052443Z",
   "ProjectPath": "C:\\Repositories\\Disertation\\TempForTests",
   "Summary": {
     "TotalFindings": 3,
@@ -24,7 +24,7 @@
       "Line": 16,
       "Column": 19,
       "CodeSnippet": "MD5.Create()",
-      "Confidence": 0.9998719692230225,
+      "Confidence": 1,
       "CveId": "CVE-2025-62514",
       "CvssBaseScore": 8.3,
       "CvssSeverity": "HIGH"
@@ -43,7 +43,7 @@
       "Line": 14,
       "Column": 24,
       "CodeSnippet": "password = \u0022superMarioa123\u0022",
-      "Confidence": 0.7903158068656921,
+      "Confidence": 1,
       "CveId": "CVE-2026-25202",
       "CvssBaseScore": 9.8,
       "CvssSeverity": "CRITICAL"

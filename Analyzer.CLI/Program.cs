@@ -64,6 +64,8 @@ if (mode == "train-ai")
 var path = args[0];
 var exportJson = args.Contains("--json");
 var useAi = args.Contains("--ai");
+var sarifOutput = ParseStringArgWithDefault(args, "--sarif", "analysis.sarif.json");
+var exportSarif = args.Contains("--sarif");
 
 var failOn = ParseFailOn(args) ?? Severity.High;
 
@@ -132,6 +134,12 @@ if (exportJson)
     Console.WriteLine("JSON report written to analysis-report.json");
 }
 
+if (exportSarif)
+{
+    var sarifWriter = new Analyzer.Reporting.Sarif.SarifReportWriter();
+    sarifWriter.Write(sarifOutput!, path, findings);
+    Console.WriteLine($"SARIF report written to {Path.GetFullPath(sarifOutput!)}");
+}
 
 var maxSeverity = findings.Count != 0 ? findings.Max(f => f.Vulnerability.Severity) : Severity.Info;
 Environment.Exit(maxSeverity >= failOn ? 2 : 0);
@@ -159,6 +167,17 @@ static string? ParseStringArg(string[] args, string name)
     return args[idx + 1];
 }
 
+static string? ParseStringArgWithDefault(string[] args, string name, string defaultValue)
+{
+    var idx = Array.FindIndex(args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
+    if (idx < 0) return null;
+
+    if (idx + 1 >= args.Length || args[idx + 1].StartsWith("--"))
+        return defaultValue;
+
+    return args[idx + 1];
+}
+
 static Severity? ParseFailOn(string[] args)
 {
     var idx = Array.FindIndex(args, a => a.Equals("--fail-on", StringComparison.OrdinalIgnoreCase));
@@ -179,7 +198,8 @@ static void PrintUsage()
 {
     Console.WriteLine("Usage:");
     Console.WriteLine("  analyzer <path> [--json] [--fail-on <info|low|medium|high|critical>]");
-    Console.WriteLine("  analyzer sync-nvd --days <n>");
-    Console.WriteLine("  --ai --min-confidence <0..1>   Enables AI scoring and filters low-confidence findings");
-    Console.WriteLine("  --export-training <file.csv>   Export findings as ML training candidates");
+    Console.WriteLine("  analyzer sync-nvd --days <n>");    
+    Console.WriteLine("  --ai --min-confidence <0..1>  Enables AI scoring and filters low-confidence findings");
+    Console.WriteLine("  --export-training <file.csv>  Export findings as ML training candidates");
+    Console.WriteLine("  --sarif [file]  Export SARIF 2.1.0 report (default: analysis.sarif.json)");
 }
