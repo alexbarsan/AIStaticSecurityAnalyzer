@@ -30,16 +30,16 @@ jobs:
       - name: Build
         run: dotnet build -c Release --no-restore
 
-      # Optional: 
-      # Add a repo secret named NVD_API_KEY to enable.
       - name: Sync NVD (optional)
-        if: ${{ secrets.NVD_API_KEY != '' }}
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
+          if [ -z "$NVD_API_KEY" ]; then
+            echo "NVD_API_KEY not set - skipping NVD sync"
+            exit 0
+          fi
           dotnet run -c Release --project Analyzer.CLI -- sync-nvd --days 7
 
-      # Run scan to generate SARIF. We allow this step to fail so SARIF still uploads.
       - name: Run Analyzer (generate SARIF)
         continue-on-error: true
         env:
@@ -58,8 +58,7 @@ jobs:
           sarif_file: analysis.sarif.json
           category: ai-static-analyzer
 
-      # Enforce gate AFTER uploading SARIF (so you get alerts even when failing)
-      - name: Enforce security gate (fail if analyzer failed)
+      - name: Enforce security gate
         run: |
           dotnet run -c Release --project Analyzer.CLI -- ./ \
             --ai \
