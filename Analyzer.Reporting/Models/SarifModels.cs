@@ -36,6 +36,7 @@ public sealed class SarifDriver
     public string Name { get; init; } = "AI Static Security Analyzer";
 
     [JsonPropertyName("informationUri")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? InformationUri { get; init; }
 
     [JsonPropertyName("rules")]
