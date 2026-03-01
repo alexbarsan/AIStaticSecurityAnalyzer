@@ -50,6 +50,12 @@ jobs:
             --min-confidence 0.7 \
             --fail-on high
 
+      - name: Debug SARIF (show first 50 lines)
+        run: |
+          ls -la
+          test -f analysis.sarif.json
+          head -n 50 analysis.sarif.json
+          
       - name: Upload SARIF to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
         with:
