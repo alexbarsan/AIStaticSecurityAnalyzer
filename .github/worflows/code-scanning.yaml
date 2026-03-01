@@ -1,0 +1,55 @@
+name: Code Scanning - AI Static Security Analyzer
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      # Optional: sync NVD (only if you have an API key in repo secrets)
+      # Add a repo secret named NVD_API_KEY to enable.
+      - name: Sync NVD (optional)
+        if: ${{ secrets.NVD_API_KEY != '' }}
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          dotnet run -c Release --project src/Analyzer.CLI -- sync-nvd --days 7
+
+      - name: Run Analyzer (SARIF)
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          dotnet run -c Release --project src/Analyzer.CLI -- ./src \
+            --sarif analysis.sarif.json \
+            --ai \
+            --min-confidence 0.7 \
+            --fail-on high
+
+      - name: Upload SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: analysis.sarif.json
