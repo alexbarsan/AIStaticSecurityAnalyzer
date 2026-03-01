@@ -56,7 +56,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "Test.cs"
+                  "uri": "./TempForTests/Test.cs"
                 },
                 "region": {
                   "startLine": 16,
@@ -83,7 +83,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "Test.cs"
+                  "uri": "./TempForTests/Test.cs"
                 },
                 "region": {
                   "startLine": 14,
@@ -110,7 +110,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "Test.cs"
+                  "uri": "./TempForTests/Test.cs"
                 },
                 "region": {
                   "startLine": 9,
