@@ -56,6 +56,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: analysis.sarif.json
+          category: ai-static-analyzer
 
       # Enforce gate AFTER uploading SARIF (so you get alerts even when failing)
       - name: Enforce security gate (fail if analyzer failed)
