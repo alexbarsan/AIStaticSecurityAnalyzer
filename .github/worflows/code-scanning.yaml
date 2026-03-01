@@ -1,0 +1,65 @@
+name: Code Scanning - AI Static Security Analyzer
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      # Optional: sync NVD data if you added NVD_API_KEY as a GitHub Secret.
+      - name: Sync NVD (optional)
+        if: ${{ secrets.NVD_API_KEY != '' }}
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          dotnet run -c Release --project Analyzer.CLI -- sync-nvd --days 7
+
+      # Run scan to generate SARIF. Allow failure so SARIF still uploads.
+      - name: Run Analyzer (generate SARIF)
+        continue-on-error: true
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          dotnet run -c Release --project Analyzer.CLI -- ./ \
+            --sarif analysis.sarif.json \
+            --json \
+            --ai \
+            --min-confidence 0.7 \
+            --fail-on high
+
+      - name: Upload SARIF to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: analysis.sarif.json
+          category: ai-static-analyzer
+
+      # Enforce gate AFTER uploading SARIF (so you get alerts even when failing)
+      - name: Enforce security gate (fail if analyzer failed)
+        run: |
+          dotnet run -c Release --project Analyzer.CLI -- ./ \
+            --ai \
+            --min-confidence 0.7 \
+            --fail-on high
