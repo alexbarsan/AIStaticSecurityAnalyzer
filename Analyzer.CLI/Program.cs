@@ -74,7 +74,7 @@ var failOn = ParseFailOn(args) ?? Severity.High;
 var skipGate = ExitCodePolicy.ShouldSkipGateForExport(exportTraining, failOnSpecified);
 
 var analyzer = new RoslynCodeAnalyzer();
-var findings = analyzer.AnalyzeDirectory(path).ToList();
+var findings = analyzer.AnalyzePath(path).ToList();
 
 // Enrich findings (best-effort)
 DbInitializer.EnsureCreated(dbPath);

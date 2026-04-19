@@ -613,6 +613,7 @@ Codex should preserve these priorities:
 - prefer incremental extensions over overengineering
 - AI is an enhancer, not the primary detection engine
 - avoid introducing unnecessary dependencies unless justified
+- future feature work should start with automated tests first whenever the behavior can be exercised locally
 
 ## Things that should probably be cleaned up/refactored
 - normalize nullable settings across projects (`<Nullable>enable</Nullable>`)

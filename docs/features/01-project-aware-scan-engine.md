@@ -27,6 +27,33 @@ The current analyzer builds a compilation from raw files plus a minimal metadata
 - make finding generation deterministic
 - fix ordering issues in the CLI so scoring and filtering happen before presentation/export
 
+## Implementation Rule
+
+This feature, and the rest of the roadmap after it, should be developed tests first whenever the behavior can be exercised locally.
+
+## Current Implementation Status
+
+Completed in the first slice:
+
+- scan input now accepts:
+  - a directory
+  - a `.csproj`
+  - a `.sln`
+- source-file selection is deterministic
+- central exclusions now skip:
+  - `bin`
+  - `obj`
+  - `.git`
+  - common generated file suffixes such as `.g.cs` and `.Designer.cs`
+- analyzer tests were added for `.csproj`, `.sln`, and exclusion behavior
+
+Still remaining for later slices:
+
+- real MSBuild workspace/project loading
+- richer reference resolution for project/package dependencies
+- explicit rule catalog/provider refactoring
+- CLI output ordering so console printing always reflects post-AI/post-filter findings
+
 ## Suggested Design
 
 - add a new abstraction in `Analyzer.Core` such as `ICompilationProvider`

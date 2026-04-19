@@ -12,3 +12,4 @@ Use that file as the primary source for future implementation sessions. It refle
 - verified code/context drift
 - the recommended next 10 features
 - architectural guidance for future Codex work
+- the rule that feature work should begin with tests first whenever feasible

@@ -30,13 +30,26 @@ This manual describes how to run the current application in this repository.
 
 ## Main Commands
 
-### 1. Scan a directory
+### 1. Scan a path
 
 ```powershell
 dotnet run --project Analyzer.CLI -- . 
 ```
 
 This scans the target path, prints findings to the console, enriches them from `cves.db`, and returns an exit code based on the highest severity found.
+
+Supported scan inputs:
+
+- a directory
+- a `.csproj`
+- a `.sln`
+
+Examples:
+
+```powershell
+dotnet run --project Analyzer.CLI -- .\MyProject\MyProject.csproj
+dotnet run --project Analyzer.CLI -- .\MySolution.sln --json
+```
 
 ### 2. Export JSON
 
@@ -174,7 +187,7 @@ Current behavior:
 
 ## Known Limitations
 
-- the analyzer currently scans raw `.cs` files rather than loading full projects/solutions
+- the analyzer now accepts directories, `.csproj`, and `.sln`, but it still does not load full MSBuild workspace semantics
 - only two rules are implemented
 - only a small automated regression runner exists today; overall coverage is still limited
 - current AI workflow is useful for experimentation, but not yet mature enough for rigorous evaluation

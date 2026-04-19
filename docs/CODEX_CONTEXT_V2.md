@@ -90,8 +90,8 @@ These points are important because the earlier context file is ahead of the code
 
 - The solution currently targets `net9.0`, not `net8.0`.
 - There is a small dedicated automated test project, but coverage is still narrow.
-- The scan engine is not project-aware; it uses `Directory.GetFiles(..., "*.cs")`.
-- Semantic references are minimal, which will limit analysis on larger real projects.
+- The scan engine now accepts directory, `.csproj`, and `.sln` inputs with deterministic file ordering and central exclusions.
+- Semantic references are better than before via trusted platform assemblies, but the analyzer still does not use MSBuild workspace loading.
 - Rule registration is hardcoded in `RoslynCodeAnalyzer`.
 - CLI parsing is manual and concentrated in `Program.cs`.
 
@@ -112,7 +112,8 @@ When continuing implementation, preserve these principles:
 3. Prefer explainable static-analysis logic over opaque "AI magic".
 4. Add dataflow/taint analysis incrementally and keep it intra-procedural first.
 5. Keep outputs machine-readable and CI-friendly.
-6. Treat tests and rule fixtures as mandatory once the next rule family starts.
+6. Start feature work with failing automated tests whenever the behavior can be exercised locally.
+7. Treat tests and rule fixtures as mandatory once the next rule family starts.
 
 ## Recommended Next 10 Features
 
@@ -136,7 +137,7 @@ Detailed specs are in `docs/features/`.
 - Decide whether to stay on `.NET 9` or move to `.NET 8 LTS`, then align all docs.
 - Introduce a real test project before adding several new rules.
 - Expand the current test runner into broader rule, CLI, and reporting coverage before adding several new rules.
-- Move toward project-aware loading, ideally through Roslyn/MSBuild workspace support.
+- Continue Feature 01 from the new path-aware scan resolver toward Roslyn/MSBuild workspace support.
 - Add deterministic scan exclusions for `bin`, `obj`, `.git`, generated code, and report outputs.
 - Normalize model/property naming to remove avoidable dissertation noise.
 

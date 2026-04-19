@@ -9,6 +9,7 @@ namespace Analyzer.Core.Interfaces
 {
     public interface ICodeAnalyzer
     {
+        IReadOnlyCollection<Finding> AnalyzePath(string path);
         IReadOnlyCollection<Finding> AnalyzeDirectory(string path);
     }
 }

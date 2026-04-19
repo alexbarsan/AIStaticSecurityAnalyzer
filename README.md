@@ -32,7 +32,7 @@ The codebase is usable, but it is still in a prototype stage. The most important
 - `Analyzer.Reporting`
   - JSON, SARIF, and CSV export
 - `Analyzer.Tests`
-  - focused regression test runner for CSV dataset/export behavior
+  - focused regression test runner for CSV workflow and scan-input behavior
 - `TempForTests`
   - Ad-hoc sample input, not a real automated test project
 
@@ -42,9 +42,10 @@ This README reflects the current repository, not only the older context notes:
 
 - The projects currently target `net9.0`.
 - There is now a small automated test runner, but coverage is still narrow.
+- The scan engine now accepts directory, `.csproj`, and `.sln` paths with deterministic source-file ordering.
 - Rule registration is hardcoded inside `RoslynCodeAnalyzer`.
 - CLI argument parsing is custom and centralized in `Program.cs`.
-- Semantic analysis currently uses a minimal set of metadata references, so real-world project resolution is still limited.
+- The current scan engine is path-aware, but it still does not load projects through MSBuild workspace semantics.
 
 ## Recommended Priority
 
@@ -62,6 +63,16 @@ The short version:
 4. Extend the taint engine to additional vulnerability classes.
 5. Add configuration, suppressions, better reporting, and stronger AI data handling.
 
+## Development Rule
+
+All feature work should start with failing automated tests whenever the behavior can be exercised locally.
+
+This is now the expected workflow for the project:
+
+1. add or expand tests for the target behavior
+2. make the implementation pass
+3. update the docs/context files if the change affects future work
+
 ## Prerequisites
 
 - Windows with Visual Studio 2022 or the .NET SDK
@@ -77,6 +88,12 @@ If you want a more stable dissertation baseline, moving the solution to `.NET 8 
 ```powershell
 dotnet run --project Analyzer.CLI -- . --json
 ```
+
+The scan path can now be:
+
+- a directory
+- a `.csproj`
+- a `.sln`
 
 ### Export SARIF
 
@@ -132,9 +149,9 @@ This now trains from the canonical labeled dataset:
 These are important and should be treated as real backlog items:
 
 - automated tests exist only for a narrow CSV/dataset slice
-- no project-aware scan loading from `.sln` / `.csproj`
+- automated tests are still narrow even after adding scan-input coverage
 - only two implemented rules
-- limited semantic references for analysis
+- scan input is path-aware, but semantic/reference loading is still not MSBuild-accurate
 - no suppression or baseline system
 - AI training/export workflow needs stronger dataset hygiene
 - some context documentation in the repository is now outdated relative to the code

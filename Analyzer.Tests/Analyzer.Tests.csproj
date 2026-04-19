@@ -4,6 +4,7 @@
     <ProjectReference Include="..\Analyzer.AI\Analyzer.AI.csproj" />
     <ProjectReference Include="..\Analyzer.Core\Analyzer.Core.csproj" />
     <ProjectReference Include="..\Analyzer.Reporting\Analyzer.Reporting.csproj" />
+    <ProjectReference Include="..\Analyzer.Roslyn\Analyzer.Roslyn.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
