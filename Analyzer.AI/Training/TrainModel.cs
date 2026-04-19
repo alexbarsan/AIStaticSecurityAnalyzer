@@ -1,10 +1,14 @@
 using Analyzer.AI.Models;
 using Microsoft.ML;
+using Microsoft.ML.Trainers;
 
 namespace Analyzer.AI.Training;
 
 public static class TrainModel
 {
+    private const int MaxTrainingIterations = 30;
+    private const float ConvergenceTolerance = 0.001f;
+
     public static void Train(string csvPath, string modelPath)
     {
         var dataset = TrainingDatasetValidator.ValidateLabeledDataset(csvPath);
@@ -30,8 +34,13 @@ public static class TrainModel
                 nameof(AiInput.HasUrlShape),
                 nameof(AiInput.HasPlaceholderValue)))
             .Append(ml.BinaryClassification.Trainers.SdcaLogisticRegression(
-                labelColumnName: nameof(AiInput.Label),
-                featureColumnName: "Features"));
+                new SdcaLogisticRegressionBinaryTrainer.Options
+                {
+                    LabelColumnName = nameof(AiInput.Label),
+                    FeatureColumnName = "Features",
+                    MaximumNumberOfIterations = MaxTrainingIterations,
+                    ConvergenceTolerance = ConvergenceTolerance
+                }));
 
         var model = pipeline.Fit(split.TrainSet);
 
@@ -48,6 +57,7 @@ public static class TrainModel
 
         Console.WriteLine("AI model evaluation:");
         Console.WriteLine($"  Training rows:  {dataset.RowCount} (pos={dataset.PositiveCount}, neg={dataset.NegativeCount})");
+        Console.WriteLine($"  Max iterations: {MaxTrainingIterations}");
         Console.WriteLine($"  Test set size: {testRows.Count} (pos={pos}, neg={neg})");
         Console.WriteLine($"  Accuracy:      {metrics.Accuracy:0.###}");
         Console.WriteLine($"  F1:            {metrics.F1Score:0.###}");

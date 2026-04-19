@@ -124,6 +124,7 @@ Current behavior:
 - relative exports are written under `Analyzer.AI/Training/`
 - the canonical default file is `training-candidates.csv`
 - exported rows are unlabeled candidates for later manual labeling
+- export-only runs skip the security gate unless `--fail-on` is explicitly provided
 
 ## Current Detection Coverage
 

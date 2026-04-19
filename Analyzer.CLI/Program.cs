@@ -1,4 +1,5 @@
 using Analyzer.AI.Training;
+using Analyzer.Core.Execution;
 using Analyzer.Core.Models;
 using Analyzer.Core.Training;
 using Analyzer.CVE.Enrichment;
@@ -65,8 +66,12 @@ var exportJson = args.Contains("--json");
 var useAi = args.Contains("--ai");
 var sarifOutput = ParseStringArgWithDefault(args, "--sarif", "analysis.sarif.json");
 var exportSarif = args.Contains("--sarif");
+var exportTrainingPath = ParseStringArgWithDefault(args, "--export-training", TrainingCsvSchema.CandidateFileName);
+var exportTraining = !string.IsNullOrWhiteSpace(exportTrainingPath);
 
+var failOnSpecified = HasArg(args, "--fail-on");
 var failOn = ParseFailOn(args) ?? Severity.High;
+var skipGate = ExitCodePolicy.ShouldSkipGateForExport(exportTraining, failOnSpecified);
 
 var analyzer = new RoslynCodeAnalyzer();
 var findings = analyzer.AnalyzeDirectory(path).ToList();
@@ -98,7 +103,6 @@ if (useAi && minConfidence > 0.0)
         .ToList();
 }
 
-var exportTrainingPath = ParseStringArgWithDefault(args, "--export-training", TrainingCsvSchema.CandidateFileName);
 if (!string.IsNullOrWhiteSpace(exportTrainingPath))
 {
     string finalPath;
@@ -140,7 +144,7 @@ if (exportSarif)
 }
 
 var maxSeverity = findings.Count != 0 ? findings.Max(f => f.Vulnerability.Severity) : Severity.Info;
-Environment.Exit(maxSeverity >= failOn ? 2 : 0);
+Environment.Exit(ExitCodePolicy.GetExitCode(maxSeverity, failOn, skipGate));
 
 static int? ParseIntArg(string[] args, string name)
 {
@@ -184,12 +188,15 @@ static Severity? ParseFailOn(string[] args)
     };
 }
 
+static bool HasArg(string[] args, string name) =>
+    args.Any(a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
+
 static void PrintUsage()
 {
     Console.WriteLine("Usage:");
     Console.WriteLine("  analyzer <path> [--json] [--fail-on <info|low|medium|high|critical>]");
     Console.WriteLine("  analyzer sync-nvd --days <n>");
     Console.WriteLine("  --ai --min-confidence <0..1>  Enables AI scoring and filters low-confidence findings");
-    Console.WriteLine($"  --export-training [file.csv]  Export unlabeled training candidates (default: {TrainingCsvSchema.CandidateFileName})");
+    Console.WriteLine($"  --export-training [file.csv]  Export unlabeled training candidates (default: {TrainingCsvSchema.CandidateFileName}); skips the gate unless --fail-on is explicit");
     Console.WriteLine("  --sarif [file]  Export SARIF 2.1.0 report (default: analysis.sarif.json)");
 }

@@ -1,4 +1,5 @@
 using Analyzer.AI.Training;
+using Analyzer.Core.Execution;
 using Analyzer.Core.Models;
 using Analyzer.Reporting;
 
@@ -15,6 +16,7 @@ internal static class Program
             ("train rejects invalid label values", TrainRejectsInvalidLabelValues),
             ("train rejects single class labeled dataset", TrainRejectsSingleClassDataset),
             ("validator accepts valid labeled dataset", ValidatorAcceptsValidLabeledDataset),
+            ("export-only runs skip the security gate unless fail-on is explicit", ExportOnlyRunsSkipGateByDefault),
         };
 
         if (args.Length > 0)
@@ -174,6 +176,16 @@ internal static class Program
         {
             Directory.Delete(tempDir, recursive: true);
         }
+    }
+
+    private static void ExportOnlyRunsSkipGateByDefault()
+    {
+        AssertEx.True(ExitCodePolicy.ShouldSkipGateForExport(exportTraining: true, failOnSpecified: false));
+        AssertEx.True(!ExitCodePolicy.ShouldSkipGateForExport(exportTraining: true, failOnSpecified: true));
+        AssertEx.True(!ExitCodePolicy.ShouldSkipGateForExport(exportTraining: false, failOnSpecified: false));
+
+        var exitCode = ExitCodePolicy.GetExitCode(Severity.Critical, Severity.High, skipGate: true);
+        AssertEx.Equal(0, exitCode);
     }
 
     private static Finding CreateWeakHashingFinding() =>
