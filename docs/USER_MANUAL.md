@@ -107,7 +107,7 @@ dotnet run --project Analyzer.CLI -- train-ai
 
 Expected input:
 
-- `Analyzer.AI/Training/training-data.csv`
+- `Analyzer.AI/Training/training-labeled.csv`
 
 Output:
 
@@ -116,13 +116,14 @@ Output:
 ### 8. Export findings as ML training candidates
 
 ```powershell
-dotnet run --project Analyzer.CLI -- . --export-training training-data.csv
+dotnet run --project Analyzer.CLI -- . --export-training training-candidates.csv
 ```
 
 Current behavior:
 
 - relative exports are written under `Analyzer.AI/Training/`
-- exported rows are candidate rows for later manual labeling
+- the canonical default file is `training-candidates.csv`
+- exported rows are unlabeled candidates for later manual labeling
 
 ## Current Detection Coverage
 
@@ -165,12 +166,16 @@ Current behavior:
   - local vulnerability database cache
 - `ai-model.zip`
   - trained ML.NET model
+- `Analyzer.AI/Training/training-labeled.csv`
+  - canonical labeled training dataset
+- `Analyzer.AI/Training/training-candidates.csv`
+  - exported unlabeled candidate dataset
 
 ## Known Limitations
 
 - the analyzer currently scans raw `.cs` files rather than loading full projects/solutions
 - only two rules are implemented
-- no automated test suite exists yet
+- only a small automated regression runner exists today; overall coverage is still limited
 - current AI workflow is useful for experimentation, but not yet mature enough for rigorous evaluation
 - CVE enrichment is best-effort and not a direct proof that a detected pattern maps to one exact CVE
 

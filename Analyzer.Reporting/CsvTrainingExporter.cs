@@ -1,5 +1,6 @@
-﻿using System.Text;
+using System.Text;
 using Analyzer.Core.Models;
+using Analyzer.Core.Training;
 
 namespace Analyzer.Reporting;
 
@@ -9,16 +10,15 @@ public sealed class CsvTrainingExporter
     {
         var sb = new StringBuilder();
 
-        // header only if file doesn't exist
+        // Candidate exports are intentionally unlabeled. They are reviewed and
+        // later copied into the canonical labeled dataset after manual labeling.
         if (!File.Exists(path))
         {
-            sb.AppendLine("Label,RuleId,CweId,SnippetLength,HasJwtShape,HasBase64Shape,HasUrlShape,HasPlaceholderValue");
+            sb.AppendLine(TrainingCsvSchema.CandidateHeader);
         }
 
         foreach (var f in findings)
         {
-            // Label left blank (-1) because you will manually label later
-            // (you can change this scheme however you like)
             var snippet = f.CodeSnippet ?? "";
             var jwt = (snippet.Count(c => c == '.') >= 2 && snippet.Length >= 20) ? 1 : 0;
             var url = snippet.Contains("http", StringComparison.OrdinalIgnoreCase) || snippet.Contains("localhost", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
@@ -26,7 +26,6 @@ public sealed class CsvTrainingExporter
             var placeholder = snippet.Contains("changeme", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
 
             sb.AppendLine(string.Join(",",
-                -1,
                 Escape(f.Vulnerability.Id),
                 Escape(f.Vulnerability.CWEId),
                 snippet.Length,

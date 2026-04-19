@@ -89,7 +89,7 @@ These points are important because the earlier context file is ahead of the code
 ### What is true now
 
 - The solution currently targets `net9.0`, not `net8.0`.
-- There is no dedicated automated test project yet.
+- There is a small dedicated automated test project, but coverage is still narrow.
 - The scan engine is not project-aware; it uses `Directory.GetFiles(..., "*.cs")`.
 - Semantic references are minimal, which will limit analysis on larger real projects.
 - Rule registration is hardcoded in `RoslynCodeAnalyzer`.
@@ -135,6 +135,7 @@ Detailed specs are in `docs/features/`.
 
 - Decide whether to stay on `.NET 9` or move to `.NET 8 LTS`, then align all docs.
 - Introduce a real test project before adding several new rules.
+- Expand the current test runner into broader rule, CLI, and reporting coverage before adding several new rules.
 - Move toward project-aware loading, ideally through Roslyn/MSBuild workspace support.
 - Add deterministic scan exclusions for `bin`, `obj`, `.git`, generated code, and report outputs.
 - Normalize model/property naming to remove avoidable dissertation noise.

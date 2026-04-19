@@ -1,11 +1,11 @@
-﻿using Analyzer.Core.Models;
+using Analyzer.AI.Training;
+using Analyzer.Core.Models;
+using Analyzer.Core.Training;
 using Analyzer.CVE.Enrichment;
 using Analyzer.CVE.Nvd;
 using Analyzer.CVE.Storage;
 using Analyzer.Reporting;
 using Analyzer.Roslyn;
-using Analyzer.AI.Training;
-
 
 Console.WriteLine("AI Static Security Analyzer");
 
@@ -45,16 +45,15 @@ string modelPath = "ai-model.zip";
 if (mode == "train-ai")
 {
     var csvPath = Path.GetFullPath(Path.Combine(
-    AppContext.BaseDirectory, "..", "..", "..", "..", "Analyzer.AI", "Training", "training-data.csv"));
+        AppContext.BaseDirectory, "..", "..", "..", "..", "Analyzer.AI", "Training", TrainingCsvSchema.LabeledFileName));
 
     if (!File.Exists(csvPath))
     {
         Console.WriteLine($"Training CSV not found: {csvPath}");
         return;
     }
-    TrainModel.Train(
-        csvPath,
-        modelPath: modelPath);
+
+    TrainModel.Train(csvPath, modelPath: modelPath);
 
     Console.WriteLine($"AI model saved to {modelPath}");
     return;
@@ -89,6 +88,7 @@ if (useAi)
     scorer.LoadModel(modelPath);
     scorer.ScoreFindings(findings);
 }
+
 var minConfidence = ParseDoubleArg(args, "--min-confidence") ?? 0.0;
 
 if (useAi && minConfidence > 0.0)
@@ -98,7 +98,7 @@ if (useAi && minConfidence > 0.0)
         .ToList();
 }
 
-var exportTrainingPath = ParseStringArg(args, "--export-training");
+var exportTrainingPath = ParseStringArgWithDefault(args, "--export-training", TrainingCsvSchema.CandidateFileName);
 if (!string.IsNullOrWhiteSpace(exportTrainingPath))
 {
     string finalPath;
@@ -119,13 +119,11 @@ if (!string.IsNullOrWhiteSpace(exportTrainingPath))
         finalPath = Path.Combine(trainingDir, exportTrainingPath);
     }
 
-    var exporter = new Analyzer.Reporting.CsvTrainingExporter();
+    var exporter = new CsvTrainingExporter();
     exporter.Append(finalPath, findings);
 
     Console.WriteLine($"Training data exported to {finalPath}");
 }
-
-
 
 if (exportJson)
 {
@@ -159,14 +157,6 @@ static double? ParseDoubleArg(string[] args, string name)
     return double.TryParse(args[idx + 1], out var v) ? v : null;
 }
 
-static string? ParseStringArg(string[] args, string name)
-{
-    var idx = Array.FindIndex(args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
-    if (idx < 0 || idx + 1 >= args.Length) return null;
-
-    return args[idx + 1];
-}
-
 static string? ParseStringArgWithDefault(string[] args, string name, string defaultValue)
 {
     var idx = Array.FindIndex(args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
@@ -198,8 +188,8 @@ static void PrintUsage()
 {
     Console.WriteLine("Usage:");
     Console.WriteLine("  analyzer <path> [--json] [--fail-on <info|low|medium|high|critical>]");
-    Console.WriteLine("  analyzer sync-nvd --days <n>");    
+    Console.WriteLine("  analyzer sync-nvd --days <n>");
     Console.WriteLine("  --ai --min-confidence <0..1>  Enables AI scoring and filters low-confidence findings");
-    Console.WriteLine("  --export-training <file.csv>  Export findings as ML training candidates");
+    Console.WriteLine($"  --export-training [file.csv]  Export unlabeled training candidates (default: {TrainingCsvSchema.CandidateFileName})");
     Console.WriteLine("  --sarif [file]  Export SARIF 2.1.0 report (default: analysis.sarif.json)");
 }

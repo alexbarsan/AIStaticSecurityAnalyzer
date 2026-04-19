@@ -6,7 +6,6 @@
       "tool": {
         "driver": {
           "name": "AI Static Security Analyzer",
-          "informationUri": null,
           "rules": [
             {
               "id": "VULN-WEAK-HASHING",

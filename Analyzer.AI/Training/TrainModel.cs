@@ -1,4 +1,4 @@
-﻿using Analyzer.AI.Models;
+using Analyzer.AI.Models;
 using Microsoft.ML;
 
 namespace Analyzer.AI.Training;
@@ -7,6 +7,7 @@ public static class TrainModel
 {
     public static void Train(string csvPath, string modelPath)
     {
+        var dataset = TrainingDatasetValidator.ValidateLabeledDataset(csvPath);
         var ml = new MLContext(seed: 1);
 
         var data = ml.Data.LoadFromTextFile<AiInput>(
@@ -46,6 +47,7 @@ public static class TrainModel
         var neg = testRows.Count - pos;
 
         Console.WriteLine("AI model evaluation:");
+        Console.WriteLine($"  Training rows:  {dataset.RowCount} (pos={dataset.PositiveCount}, neg={dataset.NegativeCount})");
         Console.WriteLine($"  Test set size: {testRows.Count} (pos={pos}, neg={neg})");
         Console.WriteLine($"  Accuracy:      {metrics.Accuracy:0.###}");
         Console.WriteLine($"  F1:            {metrics.F1Score:0.###}");

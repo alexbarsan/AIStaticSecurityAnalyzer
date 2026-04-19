@@ -31,6 +31,8 @@ The codebase is usable, but it is still in a prototype stage. The most important
   - ML.NET training and inference
 - `Analyzer.Reporting`
   - JSON, SARIF, and CSV export
+- `Analyzer.Tests`
+  - focused regression test runner for CSV dataset/export behavior
 - `TempForTests`
   - Ad-hoc sample input, not a real automated test project
 
@@ -39,7 +41,7 @@ The codebase is usable, but it is still in a prototype stage. The most important
 This README reflects the current repository, not only the older context notes:
 
 - The projects currently target `net9.0`.
-- There is no real automated test project yet.
+- There is now a small automated test runner, but coverage is still narrow.
 - Rule registration is hardcoded inside `RoslynCodeAnalyzer`.
 - CLI argument parsing is custom and centralized in `Program.cs`.
 - Semantic analysis currently uses a minimal set of metadata references, so real-world project resolution is still limited.
@@ -106,6 +108,10 @@ dotnet run --project Analyzer.CLI -- sync-nvd --days 7
 dotnet run --project Analyzer.CLI -- train-ai
 ```
 
+This now trains from the canonical labeled dataset:
+
+- `Analyzer.AI/Training/training-labeled.csv`
+
 ## Outputs
 
 - `analysis-report.json`
@@ -116,12 +122,16 @@ dotnet run --project Analyzer.CLI -- train-ai
   - Local SQLite cache for NVD data
 - `ai-model.zip`
   - Saved ML.NET model
+- `Analyzer.AI/Training/training-labeled.csv`
+  - canonical labeled dataset used for training
+- `Analyzer.AI/Training/training-candidates.csv`
+  - unlabeled candidate rows exported for manual review and labeling
 
 ## Known Gaps
 
 These are important and should be treated as real backlog items:
 
-- no automated tests
+- automated tests exist only for a narrow CSV/dataset slice
 - no project-aware scan loading from `.sln` / `.csproj`
 - only two implemented rules
 - limited semantic references for analysis
