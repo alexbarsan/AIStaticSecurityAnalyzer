@@ -16,6 +16,24 @@ The repository currently has no actual test project. Adding more rules without a
 - add CLI integration tests for exit codes and command modes
 - add taint-analysis fixtures before SQL injection is implemented
 
+## Current Implementation Status
+
+Completed in the first slice:
+
+- fixture-backed regression tests were added for the two implemented rules:
+  - weak hashing
+  - hardcoded secrets
+- positive and negative samples now live under `Analyzer.Tests/Fixtures/Rules/`
+- the test harness loads fixture files from disk instead of relying only on inline synthetic snippets
+- the fixture tree is excluded from compilation so it behaves as test data, not production code
+
+Still remaining:
+
+- move the runner toward a conventional unit/integration layout if desired
+- add reporting snapshots for JSON and SARIF
+- add CLI integration coverage for exit codes and command modes
+- add enrichment and AI dataset regression coverage
+
 ## Suggested Structure
 
 - `Analyzer.Tests`

@@ -16,3 +16,4 @@ Use that file as the primary source for future implementation sessions. It refle
 - the rule that each meaningful feature slice should produce an academic log markdown file
 - the current Feature 01 status, including recursive basic `ProjectReference` handling
 - the fact that project scan scope is now based on evaluated MSBuild items for `.csproj` inputs
+- the current Feature 02 starting point, with fixture-backed rule tests for weak hashing and hardcoded secrets

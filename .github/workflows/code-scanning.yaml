@@ -45,7 +45,7 @@ jobs:
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
-          dotnet run -c Release --project Analyzer.CLI -- ./ \
+          dotnet run -c Release --project Analyzer.CLI -- AIStaticSecurityAnalyzer.sln \
             --sarif analysis.sarif.json \
             --json \
             --ai \
@@ -60,7 +60,7 @@ jobs:
 
       - name: Enforce security gate
         run: |
-          dotnet run -c Release --project Analyzer.CLI -- ./ \
+          dotnet run -c Release --project Analyzer.CLI -- AIStaticSecurityAnalyzer.sln \
             --ai \
             --min-confidence 0.7 \
             --fail-on high
