@@ -47,12 +47,59 @@ Completed in the first slice:
   - common generated file suffixes such as `.g.cs` and `.Designer.cs`
 - analyzer tests were added for `.csproj`, `.sln`, and exclusion behavior
 
-Still remaining for later slices:
+Completed in the second slice:
 
-- real MSBuild workspace/project loading
-- richer reference resolution for project/package dependencies
+- `.csproj` file discovery now respects basic project compile items:
+  - `EnableDefaultCompileItems`
+  - `Compile Include`
+  - `Compile Remove`
+- analyzer tests were added for:
+  - explicit include-only projects
+  - removal of files from the compile set
+
+Completed in the third slice:
+
+- the CLI post-analysis path now uses a consistent final pipeline:
+  - enrich
+  - AI score
+  - confidence filter
+  - console render
+  - export
+  - exit code
+- invalid analysis paths now return a friendly console error instead of an unhandled stack trace
+- analyzer tests were added for:
+  - final pipeline ordering
+  - user-friendly invalid-path messaging
+
+Completed in the fourth slice:
+
+- `.csproj` file discovery now walks basic `ProjectReference` graphs recursively
+- referenced projects contribute source files to the same deterministic analysis set
+- recursion is guarded so cyclic project references do not loop or duplicate findings
+- analyzer tests were added for:
+  - findings coming from referenced projects
+  - compile-item behavior inside referenced projects
+  - cycle-safe project-reference traversal
+
+Completed in the fifth slice:
+
+- `.csproj` inputs now use evaluated MSBuild item discovery through `dotnet msbuild`
+- imported build state now affects scan scope, including:
+  - `Directory.Build.props`
+  - conditioned `ProjectReference` items
+  - evaluated `Compile` items after imports and conditions
+- the analyzer keeps the Roslyn rule engine, but project file selection is now based on evaluated build results instead of raw XML only
+- analyzer tests were added for:
+  - `Directory.Build.props` disabling default compile items
+  - conditioned project references controlled by evaluated MSBuild properties
+
+Feature 01 is considered complete for the current dissertation roadmap.
+
+Possible future hardening beyond this feature:
+
+- resolve package/framework metadata from evaluated build outputs instead of trusted platform assemblies only
+- replace the current `dotnet msbuild` bridge with a dedicated in-process compilation provider if deeper build fidelity becomes necessary
 - explicit rule catalog/provider refactoring
-- CLI output ordering so console printing always reflects post-AI/post-filter findings
 
 ## Suggested Design
 

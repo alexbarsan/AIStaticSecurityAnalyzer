@@ -90,8 +90,9 @@ These points are important because the earlier context file is ahead of the code
 
 - The solution currently targets `net9.0`, not `net8.0`.
 - There is a small dedicated automated test project, but coverage is still narrow.
-- The scan engine now accepts directory, `.csproj`, and `.sln` inputs with deterministic file ordering and central exclusions.
-- Semantic references are better than before via trusted platform assemblies, but the analyzer still does not use MSBuild workspace loading.
+- The scan engine now accepts directory, `.csproj`, and `.sln` inputs with deterministic file ordering, central exclusions, recursive project-reference traversal, and evaluated MSBuild compile-item discovery for project inputs.
+- The CLI scan path now renders and exports the same final post-AI/post-filter finding set.
+- Semantic references are still primarily based on trusted platform assemblies, but project scan scope is now derived from evaluated MSBuild items instead of raw project XML alone.
 - Rule registration is hardcoded in `RoslynCodeAnalyzer`.
 - CLI parsing is manual and concentrated in `Program.cs`.
 
@@ -114,6 +115,7 @@ When continuing implementation, preserve these principles:
 5. Keep outputs machine-readable and CI-friendly.
 6. Start feature work with failing automated tests whenever the behavior can be exercised locally.
 7. Treat tests and rule fixtures as mandatory once the next rule family starts.
+8. Add an academic log markdown file for each meaningful feature slice under `docs/academic_logs/`.
 
 ## Recommended Next 10 Features
 
@@ -137,7 +139,9 @@ Detailed specs are in `docs/features/`.
 - Decide whether to stay on `.NET 9` or move to `.NET 8 LTS`, then align all docs.
 - Introduce a real test project before adding several new rules.
 - Expand the current test runner into broader rule, CLI, and reporting coverage before adding several new rules.
-- Continue Feature 01 from the new path-aware scan resolver toward Roslyn/MSBuild workspace support.
+- Treat Feature 01 as complete for the current roadmap baseline.
+- If deeper build fidelity becomes necessary later, improve metadata/reference resolution before adding more semantically demanding rules.
+- Keep extending project-aware scan behavior incrementally, but continue doing it test-first.
 - Add deterministic scan exclusions for `bin`, `obj`, `.git`, generated code, and report outputs.
 - Normalize model/property naming to remove avoidable dissertation noise.
 

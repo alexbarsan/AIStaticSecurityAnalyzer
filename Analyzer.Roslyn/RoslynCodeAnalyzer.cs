@@ -27,7 +27,17 @@ namespace Analyzer.Roslyn
                 CreateMetadataReferences(),
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
+            return AnalyzeCompilation(compilation);
+        }
+
+        public IReadOnlyCollection<Finding> AnalyzeDirectory(string path) => AnalyzePath(path);
+
+        private IReadOnlyCollection<Finding> AnalyzeCompilation(Compilation compilation)
+        {
             var findings = new List<Finding>();
+            var syntaxTrees = compilation.SyntaxTrees
+                .Where(tree => !string.IsNullOrWhiteSpace(tree.FilePath) && AnalysisInputResolver.ShouldIncludeSourceFile(tree.FilePath))
+                .OrderBy(tree => tree.FilePath, StringComparer.OrdinalIgnoreCase);
 
             foreach (var tree in syntaxTrees)
             {
@@ -41,15 +51,16 @@ namespace Analyzer.Roslyn
                 }
             }
 
-            return findings
+            return OrderFindings(findings);
+        }
+
+        private static IReadOnlyCollection<Finding> OrderFindings(IEnumerable<Finding> findings) =>
+            findings
                 .OrderBy(f => f.FilePath, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(f => f.Line)
                 .ThenBy(f => f.Column)
                 .ThenBy(f => f.Vulnerability.Id, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-        }
-
-        public IReadOnlyCollection<Finding> AnalyzeDirectory(string path) => AnalyzePath(path);
 
         private static IReadOnlyCollection<MetadataReference> CreateMetadataReferences()
         {

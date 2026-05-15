@@ -1,6 +1,7 @@
 using Analyzer.AI.Training;
 using Analyzer.Core.Execution;
 using Analyzer.Core.Models;
+using Analyzer.Core.Pipeline;
 using Analyzer.Reporting;
 using Analyzer.Roslyn;
 
@@ -21,6 +22,14 @@ internal static class Program
             ("csproj input scans project files", CsprojInputScansProjectFiles),
             ("solution input scans all projects deterministically", SolutionInputScansProjectsDeterministically),
             ("project scanning excludes noise and generated files", ProjectScanningExcludesNoiseAndGeneratedFiles),
+            ("csproj respects Compile Remove items", CsprojRespectsCompileRemoveItems),
+            ("directory build props can disable default compile items", DirectoryBuildPropsCanDisableDefaultCompileItems),
+            ("csproj includes referenced project sources", CsprojIncludesReferencedProjectSources),
+            ("csproj respects compile settings inside referenced projects", CsprojRespectsReferencedProjectCompileSettings),
+            ("conditioned project references respect evaluated msbuild properties", ConditionedProjectReferencesRespectEvaluatedMsbuildProperties),
+            ("project reference cycles do not loop or duplicate findings", ProjectReferenceCyclesDoNotLoopOrDuplicateFindings),
+            ("final pipeline applies scoring before filtering and rendering", FinalPipelineAppliesScoringBeforeFilteringAndRendering),
+            ("invalid analysis path returns a friendly console message", InvalidAnalysisPathReturnsFriendlyMessage),
         };
 
         if (args.Length > 0)
@@ -305,6 +314,263 @@ public class Hashing
         }
     }
 
+    private static void CsprojRespectsCompileRemoveItems()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var projectDir = Path.Combine(tempDir, "ProjectOne");
+            Directory.CreateDirectory(projectDir);
+
+            var projectPath = Path.Combine(projectDir, "ProjectOne.csproj");
+            File.WriteAllText(projectPath, CreateSdkStyleProjectWithCompileRemove("IgnoredSecrets.cs"));
+
+            var keptSourcePath = Path.Combine(projectDir, "KeptSecrets.cs");
+            var removedSourcePath = Path.Combine(projectDir, "IgnoredSecrets.cs");
+
+            File.WriteAllText(keptSourcePath, CreateSecretSource("KeptToken"));
+            File.WriteAllText(removedSourcePath, CreateSecretSource("IgnoredToken"));
+
+            var analyzer = new RoslynCodeAnalyzer();
+            var findings = analyzer.AnalyzeDirectory(projectPath).ToList();
+
+            AssertEx.Equal(1, findings.Count);
+            AssertEx.Equal(keptSourcePath, findings[0].FilePath);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    private static void CsprojExplicitCompileIncludeWorksWithDefaultItemsDisabled()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var projectDir = Path.Combine(tempDir, "ProjectOne");
+            Directory.CreateDirectory(projectDir);
+
+            var projectPath = Path.Combine(projectDir, "ProjectOne.csproj");
+            File.WriteAllText(projectPath, CreateSdkStyleProjectWithCompileIncludeOnly("OnlySecrets.cs"));
+
+            var includedSourcePath = Path.Combine(projectDir, "OnlySecrets.cs");
+            var ignoredSourcePath = Path.Combine(projectDir, "IgnoredSecrets.cs");
+
+            File.WriteAllText(includedSourcePath, CreateSecretSource("OnlyToken"));
+            File.WriteAllText(ignoredSourcePath, CreateSecretSource("IgnoredToken"));
+
+            var compileItems = GetMsbuildItemFullPaths(projectPath, "Compile").ToList();
+
+            AssertEx.True(compileItems.Contains(includedSourcePath, StringComparer.OrdinalIgnoreCase));
+            AssertEx.True(!compileItems.Contains(ignoredSourcePath, StringComparer.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    private static void DirectoryBuildPropsCanDisableDefaultCompileItems()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            File.WriteAllText(Path.Combine(tempDir, "Directory.Build.props"), CreateDirectoryBuildPropsWithDefaultCompileItemsDisabled());
+
+            var projectDir = Path.Combine(tempDir, "ProjectOne");
+            Directory.CreateDirectory(projectDir);
+
+            var projectPath = Path.Combine(projectDir, "ProjectOne.csproj");
+            File.WriteAllText(projectPath, CreateSdkStyleProjectWithExplicitCompileInclude("OnlySecrets.cs"));
+
+            var includedSourcePath = Path.Combine(projectDir, "OnlySecrets.cs");
+            var ignoredSourcePath = Path.Combine(projectDir, "IgnoredSecrets.cs");
+
+            File.WriteAllText(includedSourcePath, CreateSecretSource("OnlyToken"));
+            File.WriteAllText(ignoredSourcePath, CreateSecretSource("IgnoredToken"));
+
+            var analyzer = new RoslynCodeAnalyzer();
+            var findings = analyzer.AnalyzeDirectory(projectPath).ToList();
+
+            AssertEx.Equal(1, findings.Count);
+            AssertEx.Equal(includedSourcePath, findings[0].FilePath);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    private static void CsprojIncludesReferencedProjectSources()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var appDir = Path.Combine(tempDir, "App");
+            var libDir = Path.Combine(tempDir, "Lib");
+            Directory.CreateDirectory(appDir);
+            Directory.CreateDirectory(libDir);
+
+            var libProjectPath = Path.Combine(libDir, "Lib.csproj");
+            File.WriteAllText(libProjectPath, CreateSdkStyleProject());
+            File.WriteAllText(Path.Combine(libDir, "LibSecrets.cs"), CreateSecretSource("LibToken"));
+
+            var appProjectPath = Path.Combine(appDir, "App.csproj");
+            File.WriteAllText(appProjectPath, CreateSdkStyleProjectWithProjectReference(Path.Combine("..", "Lib", "Lib.csproj")));
+            File.WriteAllText(Path.Combine(appDir, "AppSecrets.cs"), CreateSecretSource("AppToken"));
+
+            var analyzer = new RoslynCodeAnalyzer();
+            var findings = analyzer.AnalyzeDirectory(appProjectPath).ToList();
+
+            AssertEx.Equal(2, findings.Count);
+            AssertEx.Contains("AppSecrets.cs", findings[0].FilePath);
+            AssertEx.Contains("LibSecrets.cs", findings[1].FilePath);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    private static void CsprojRespectsReferencedProjectCompileSettings()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var appDir = Path.Combine(tempDir, "App");
+            var libDir = Path.Combine(tempDir, "Lib");
+            Directory.CreateDirectory(appDir);
+            Directory.CreateDirectory(libDir);
+
+            var libProjectPath = Path.Combine(libDir, "Lib.csproj");
+            File.WriteAllText(libProjectPath, CreateSdkStyleProjectWithCompileRemove("IgnoredLibSecrets.cs"));
+            File.WriteAllText(Path.Combine(libDir, "KeptLibSecrets.cs"), CreateSecretSource("KeptLibToken"));
+            File.WriteAllText(Path.Combine(libDir, "IgnoredLibSecrets.cs"), CreateSecretSource("IgnoredLibToken"));
+
+            var appProjectPath = Path.Combine(appDir, "App.csproj");
+            File.WriteAllText(appProjectPath, CreateSdkStyleProjectWithProjectReference(Path.Combine("..", "Lib", "Lib.csproj")));
+            File.WriteAllText(Path.Combine(appDir, "AppSecrets.cs"), CreateSecretSource("AppToken"));
+
+            var analyzer = new RoslynCodeAnalyzer();
+            var findings = analyzer.AnalyzeDirectory(appProjectPath).ToList();
+
+            AssertEx.Equal(2, findings.Count);
+            AssertEx.Contains("AppSecrets.cs", findings[0].FilePath);
+            AssertEx.Contains("KeptLibSecrets.cs", findings[1].FilePath);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    private static void ConditionedProjectReferencesRespectEvaluatedMsbuildProperties()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            File.WriteAllText(Path.Combine(tempDir, "Directory.Build.props"), CreateDirectoryBuildPropsWithProperty("IncludeLib", "false"));
+
+            var appDir = Path.Combine(tempDir, "App");
+            var libDir = Path.Combine(tempDir, "Lib");
+            Directory.CreateDirectory(appDir);
+            Directory.CreateDirectory(libDir);
+
+            var libProjectPath = Path.Combine(libDir, "Lib.csproj");
+            File.WriteAllText(libProjectPath, CreateSdkStyleProject());
+            File.WriteAllText(Path.Combine(libDir, "LibSecrets.cs"), CreateSecretSource("LibToken"));
+
+            var appProjectPath = Path.Combine(appDir, "App.csproj");
+            File.WriteAllText(appProjectPath, CreateSdkStyleProjectWithConditionedProjectReference(Path.Combine("..", "Lib", "Lib.csproj"), "'$(IncludeLib)' == 'true'"));
+            File.WriteAllText(Path.Combine(appDir, "AppSecrets.cs"), CreateSecretSource("AppToken"));
+
+            var analyzer = new RoslynCodeAnalyzer();
+            var findings = analyzer.AnalyzeDirectory(appProjectPath).ToList();
+
+            AssertEx.Equal(1, findings.Count);
+            AssertEx.Contains("AppSecrets.cs", findings[0].FilePath);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    private static void ProjectReferenceCyclesDoNotLoopOrDuplicateFindings()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var projectADir = Path.Combine(tempDir, "ProjectA");
+            var projectBDir = Path.Combine(tempDir, "ProjectB");
+            Directory.CreateDirectory(projectADir);
+            Directory.CreateDirectory(projectBDir);
+
+            var projectAPath = Path.Combine(projectADir, "ProjectA.csproj");
+            var projectBPath = Path.Combine(projectBDir, "ProjectB.csproj");
+
+            File.WriteAllText(projectAPath, CreateSdkStyleProjectWithProjectReferences(Path.Combine("..", "ProjectB", "ProjectB.csproj")));
+            File.WriteAllText(projectBPath, CreateSdkStyleProjectWithProjectReferences(Path.Combine("..", "ProjectA", "ProjectA.csproj")));
+
+            File.WriteAllText(Path.Combine(projectADir, "ASecrets.cs"), CreateSecretSource("AToken"));
+            File.WriteAllText(Path.Combine(projectBDir, "BSecrets.cs"), CreateSecretSource("BToken"));
+
+            var analyzer = new RoslynCodeAnalyzer();
+            var findings = analyzer.AnalyzeDirectory(projectAPath).ToList();
+
+            AssertEx.Equal(2, findings.Count);
+            AssertEx.Equal(2, findings.Select(finding => finding.FilePath).Distinct(StringComparer.OrdinalIgnoreCase).Count());
+            AssertEx.Contains("ASecrets.cs", findings[0].FilePath);
+            AssertEx.Contains("BSecrets.cs", findings[1].FilePath);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    private static void FinalPipelineAppliesScoringBeforeFilteringAndRendering()
+    {
+        var lowFinding = CreateSecretFinding("LowToken", confidence: 1.0);
+        var highFinding = CreateSecretFinding("HighToken", confidence: 1.0);
+        var findings = new[] { lowFinding, highFinding };
+
+        var processed = ScanPipelineProcessor.Process(
+            findings,
+            useAi: true,
+            minConfidence: 0.5,
+            scoreFindings: items =>
+            {
+                items[0].Confidence = 0.2;
+                items[1].Confidence = 0.8;
+            });
+
+        AssertEx.Equal(1, processed.FinalFindings.Count);
+        AssertEx.Equal("HighToken", processed.FinalFindings[0].CodeSnippet);
+        AssertEx.Equal(1, processed.ConsoleLines.Count);
+        AssertEx.Contains("conf 0.80", processed.ConsoleLines[0]);
+        AssertEx.Contains("HighToken.cs", processed.ConsoleLines[0]);
+    }
+
+    private static void InvalidAnalysisPathReturnsFriendlyMessage()
+    {
+        var missingPath = Path.Combine("C:\\", "missing", "project.csproj");
+        var ex = new FileNotFoundException("Analysis path was not found.", missingPath);
+
+        var message = ScanErrorFormatter.Format(ex);
+
+        AssertEx.Contains("Analysis path was not found", message);
+        AssertEx.Contains(missingPath, message);
+    }
+
     private static Finding CreateWeakHashingFinding() =>
         new()
         {
@@ -321,6 +587,25 @@ public class Hashing
             Line = 1,
             Column = 1,
             CodeSnippet = "MD5.Create()"
+        };
+
+    private static Finding CreateSecretFinding(string name, double confidence) =>
+        new()
+        {
+            Vulnerability = new Vulnerability
+            {
+                Id = "VULN-HARDCODED-SECRET",
+                Name = "Hardcoded secret in source code",
+                Description = "Sensitive information is stored in source code.",
+                CWEId = "CWE-798",
+                Severity = Severity.Critical,
+                Recommandation = "Store secrets securely."
+            },
+            FilePath = $"{name}.cs",
+            Line = 10,
+            Column = 5,
+            CodeSnippet = name,
+            Confidence = confidence
         };
 
     private static string CreateTempDirectory()
@@ -341,6 +626,98 @@ public class Hashing
 </Project>
 """;
 
+    private static string CreateSdkStyleProjectWithCompileRemove(string removedFile) =>
+        $$"""
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="{{removedFile}}" />
+  </ItemGroup>
+</Project>
+""";
+
+    private static string CreateSdkStyleProjectWithExplicitCompileInclude(string includedFile) =>
+        $$"""
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="{{includedFile}}" />
+  </ItemGroup>
+</Project>
+""";
+
+    private static string CreateSdkStyleProjectWithCompileIncludeOnly(string includedFile) =>
+        $$"""
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="{{includedFile}}" />
+  </ItemGroup>
+</Project>
+""";
+
+    private static string CreateSdkStyleProjectWithProjectReference(string relativeProjectReference) =>
+        CreateSdkStyleProjectWithProjectReferences(relativeProjectReference);
+
+    private static string CreateSdkStyleProjectWithProjectReferences(params string[] relativeProjectReferences) =>
+        $$"""
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+{{string.Join(Environment.NewLine, relativeProjectReferences.Select(projectReference => $"    <ProjectReference Include=\"{projectReference}\" />"))}}
+  </ItemGroup>
+</Project>
+""";
+
+    private static string CreateSdkStyleProjectWithConditionedProjectReference(string relativeProjectReference, string condition) =>
+        $$"""
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="{{relativeProjectReference}}" Condition="{{condition}}" />
+  </ItemGroup>
+</Project>
+""";
+
+    private static string CreateDirectoryBuildPropsWithDefaultCompileItemsDisabled() =>
+        """
+<Project>
+  <PropertyGroup>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+</Project>
+""";
+
+    private static string CreateDirectoryBuildPropsWithProperty(string name, string value) =>
+        $$"""
+<Project>
+  <PropertyGroup>
+    <{{name}}>{{value}}</{{name}}>
+  </PropertyGroup>
+</Project>
+""";
+
     private static string CreateSecretSource(string propertyName) =>
         $$"""
 public class Secrets
@@ -348,6 +725,89 @@ public class Secrets
     public string {{propertyName}} { get; } = "JhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc.123";
 }
 """;
+
+    private static string RunCli(string analysisPath, out int exitCode)
+    {
+        var cliPath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "Analyzer.CLI",
+            "bin",
+            "Debug",
+            "net9.0",
+            "Analyzer.CLI.dll"));
+
+        var startInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "dotnet",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WorkingDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."))
+        };
+
+        startInfo.ArgumentList.Add("exec");
+        startInfo.ArgumentList.Add(cliPath);
+        startInfo.ArgumentList.Add(analysisPath);
+
+        using var process = System.Diagnostics.Process.Start(startInfo)
+            ?? throw new InvalidOperationException("Failed to start CLI process.");
+
+        var standardOutput = process.StandardOutput.ReadToEnd();
+        var standardError = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        exitCode = process.ExitCode;
+        return string.Concat(standardOutput, standardError);
+    }
+
+    private static IReadOnlyCollection<string> GetMsbuildItemFullPaths(string projectPath, string itemName)
+    {
+        var startInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "dotnet",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WorkingDirectory = Path.GetDirectoryName(projectPath) ?? Environment.CurrentDirectory
+        };
+
+        startInfo.ArgumentList.Add("msbuild");
+        startInfo.ArgumentList.Add(projectPath);
+        startInfo.ArgumentList.Add($"-getItem:{itemName}");
+        startInfo.ArgumentList.Add("-nologo");
+
+        using var process = System.Diagnostics.Process.Start(startInfo)
+            ?? throw new InvalidOperationException("Failed to start dotnet msbuild from test.");
+
+        var standardOutput = process.StandardOutput.ReadToEnd();
+        var standardError = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException($"dotnet msbuild failed in test: {standardError}");
+        }
+
+        using var jsonDocument = System.Text.Json.JsonDocument.Parse(standardOutput);
+        if (!jsonDocument.RootElement.TryGetProperty("Items", out var itemsElement) ||
+            !itemsElement.TryGetProperty(itemName, out var itemArray))
+        {
+            return Array.Empty<string>();
+        }
+
+        return itemArray
+            .EnumerateArray()
+            .Select(item => item.TryGetProperty("FullPath", out var fullPathElement) ? fullPathElement.GetString() : null)
+            .Where(fullPath => !string.IsNullOrWhiteSpace(fullPath))
+            .Select(fullPath => Path.GetFullPath(fullPath!))
+            .ToList();
+    }
 
     private static string CreateSolutionFile(params (string Name, string RelativeProjectPath)[] projects)
     {

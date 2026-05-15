@@ -8,23 +8,6 @@
           "name": "AI Static Security Analyzer",
           "rules": [
             {
-              "id": "VULN-WEAK-HASHING",
-              "name": "Use of weak cryptographic hashing algorithm",
-              "shortDescription": {
-                "text": "Use of weak cryptographic hashing algorithm"
-              },
-              "fullDescription": {
-                "text": "The application uses MD5 or SHA1 which are considered cryptographically broken."
-              },
-              "help": {
-                "text": "Use SHA-256 or stronger hashing algorithms."
-              },
-              "properties": {
-                "cweId": "CWE-327",
-                "defaultSeverity": "High"
-              }
-            },
-            {
               "id": "VULN-HARDCODED-SECRET",
               "name": "Hardcoded secret in source code",
               "shortDescription": {
@@ -40,36 +23,53 @@
                 "cweId": "CWE-798",
                 "defaultSeverity": "Critical"
               }
+            },
+            {
+              "id": "VULN-WEAK-HASHING",
+              "name": "Use of weak cryptographic hashing algorithm",
+              "shortDescription": {
+                "text": "Use of weak cryptographic hashing algorithm"
+              },
+              "fullDescription": {
+                "text": "The application uses MD5 or SHA1 which are considered cryptographically broken."
+              },
+              "help": {
+                "text": "Use SHA-256 or stronger hashing algorithms."
+              },
+              "properties": {
+                "cweId": "CWE-327",
+                "defaultSeverity": "High"
+              }
             }
           ]
         }
       },
       "results": [
         {
-          "ruleId": "VULN-WEAK-HASHING",
+          "ruleId": "VULN-HARDCODED-SECRET",
           "level": "error",
           "message": {
-            "text": "Use of weak cryptographic hashing algorithm (CVE-2025-62514) CVSS 8.3 [conf 1.00]"
+            "text": "Hardcoded secret in source code (CVE-2026-25202) CVSS 9.8 [conf 1.00]"
           },
           "locations": [
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "./TempForTests/Test.cs"
+                  "uri": "C:/Repositories/Disertation/TempForTests/Test.cs"
                 },
                 "region": {
-                  "startLine": 16,
-                  "startColumn": 19
+                  "startLine": 9,
+                  "startColumn": 36
                 }
               }
             }
           ],
           "properties": {
-            "cweId": "CWE-327",
+            "cweId": "CWE-798",
             "confidence": 1,
-            "cveId": "CVE-2025-62514",
-            "cvssBaseScore": 8.3,
-            "cvssSeverity": "HIGH"
+            "cveId": "CVE-2026-25202",
+            "cvssBaseScore": 9.8,
+            "cvssSeverity": "CRITICAL"
           }
         },
         {
@@ -82,7 +82,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "./TempForTests/Test.cs"
+                  "uri": "C:/Repositories/Disertation/TempForTests/Test.cs"
                 },
                 "region": {
                   "startLine": 14,
@@ -100,30 +100,30 @@
           }
         },
         {
-          "ruleId": "VULN-HARDCODED-SECRET",
+          "ruleId": "VULN-WEAK-HASHING",
           "level": "error",
           "message": {
-            "text": "Hardcoded secret in source code (CVE-2026-25202) CVSS 9.8 [conf 1.00]"
+            "text": "Use of weak cryptographic hashing algorithm (CVE-2025-62514) CVSS 8.3 [conf 1.00]"
           },
           "locations": [
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "./TempForTests/Test.cs"
+                  "uri": "C:/Repositories/Disertation/TempForTests/Test.cs"
                 },
                 "region": {
-                  "startLine": 9,
-                  "startColumn": 36
+                  "startLine": 16,
+                  "startColumn": 19
                 }
               }
             }
           ],
           "properties": {
-            "cweId": "CWE-798",
+            "cweId": "CWE-327",
             "confidence": 1,
-            "cveId": "CVE-2026-25202",
-            "cvssBaseScore": 9.8,
-            "cvssSeverity": "CRITICAL"
+            "cveId": "CVE-2025-62514",
+            "cvssBaseScore": 8.3,
+            "cvssSeverity": "HIGH"
           }
         }
       ]

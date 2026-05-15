@@ -1,6 +1,7 @@
 using Analyzer.AI.Training;
 using Analyzer.Core.Execution;
 using Analyzer.Core.Models;
+using Analyzer.Core.Pipeline;
 using Analyzer.Core.Training;
 using Analyzer.CVE.Enrichment;
 using Analyzer.CVE.Nvd;
@@ -74,33 +75,40 @@ var failOn = ParseFailOn(args) ?? Severity.High;
 var skipGate = ExitCodePolicy.ShouldSkipGateForExport(exportTraining, failOnSpecified);
 
 var analyzer = new RoslynCodeAnalyzer();
-var findings = analyzer.AnalyzePath(path).ToList();
+List<Finding> findings;
+
+try
+{
+    findings = analyzer.AnalyzePath(path).ToList();
+}
+catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException or NotSupportedException or ArgumentException)
+{
+    Console.Error.WriteLine(ScanErrorFormatter.Format(ex));
+    Environment.Exit(1);
+    return;
+}
 
 // Enrich findings (best-effort)
 DbInitializer.EnsureCreated(dbPath);
 var enricher = new FindingEnricher(new CveRepository(dbPath));
 enricher.Enrich(findings);
 
-foreach (var finding in findings)
-{
-    var cveText = string.IsNullOrWhiteSpace(finding.CveId) ? "" : $" ({finding.CveId}, CVSS {finding.CvssBaseScore?.ToString("0.0") ?? "?"})";
-    Console.WriteLine($"[{finding.Vulnerability.Severity}] {finding.Vulnerability.Name} (conf {finding.Confidence:0.00}) {cveText} at {finding.FilePath}:{finding.Line}");
-}
+var minConfidence = ParseDoubleArg(args, "--min-confidence") ?? 0.0;
 
+Action<IReadOnlyList<Finding>>? scoreFindings = null;
 if (useAi)
 {
     var scorer = new Analyzer.AI.AiScorer();
     scorer.LoadModel(modelPath);
-    scorer.ScoreFindings(findings);
+    scoreFindings = items => scorer.ScoreFindings(items);
 }
 
-var minConfidence = ParseDoubleArg(args, "--min-confidence") ?? 0.0;
+var pipelineResult = ScanPipelineProcessor.Process(findings, useAi, minConfidence, scoreFindings);
+findings = pipelineResult.FinalFindings.ToList();
 
-if (useAi && minConfidence > 0.0)
+foreach (var line in pipelineResult.ConsoleLines)
 {
-    findings = findings
-        .Where(f => f.Confidence >= minConfidence)
-        .ToList();
+    Console.WriteLine(line);
 }
 
 if (!string.IsNullOrWhiteSpace(exportTrainingPath))

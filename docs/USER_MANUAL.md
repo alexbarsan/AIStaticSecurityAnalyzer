@@ -38,11 +38,20 @@ dotnet run --project Analyzer.CLI -- .
 
 This scans the target path, prints findings to the console, enriches them from `cves.db`, and returns an exit code based on the highest severity found.
 
+The console output now reflects the same final finding set that is used for export and exit-code evaluation after AI scoring and confidence filtering.
+
 Supported scan inputs:
 
 - a directory
 - a `.csproj`
 - a `.sln`
+
+Current `.csproj` awareness includes:
+
+- evaluated `Compile` items from `dotnet msbuild`
+- imported build settings such as `Directory.Build.props`
+- conditioned `ProjectReference` items after MSBuild evaluation
+- recursive `ProjectReference` traversal with cycle protection
 
 Examples:
 
@@ -187,7 +196,9 @@ Current behavior:
 
 ## Known Limitations
 
-- the analyzer now accepts directories, `.csproj`, and `.sln`, but it still does not load full MSBuild workspace semantics
+- the analyzer now accepts directories, `.csproj`, and `.sln`, and project inputs use evaluated MSBuild compile/project items to determine scan scope
+- metadata reference resolution is still lighter than a full design-time build; the current rules work well for the present dissertation scope, but deeper future semantic rules may need richer package/framework reference loading
+- invalid scan paths now fail with a friendly error message, but full MSBuild workspace loading is still not implemented
 - only two rules are implemented
 - only a small automated regression runner exists today; overall coverage is still limited
 - current AI workflow is useful for experimentation, but not yet mature enough for rigorous evaluation

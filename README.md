@@ -43,6 +43,9 @@ This README reflects the current repository, not only the older context notes:
 - The projects currently target `net9.0`.
 - There is now a small automated test runner, but coverage is still narrow.
 - The scan engine now accepts directory, `.csproj`, and `.sln` paths with deterministic source-file ordering.
+- `.csproj` scanning now follows basic `ProjectReference` graphs and avoids cyclic duplication.
+- project scan scope is now derived from evaluated MSBuild `Compile` and `ProjectReference` items rather than only raw project XML parsing.
+- The CLI now prints the same final finding set that it exports after AI/filter processing.
 - Rule registration is hardcoded inside `RoslynCodeAnalyzer`.
 - CLI argument parsing is custom and centralized in `Program.cs`.
 - The current scan engine is path-aware, but it still does not load projects through MSBuild workspace semantics.
@@ -72,6 +75,8 @@ This is now the expected workflow for the project:
 1. add or expand tests for the target behavior
 2. make the implementation pass
 3. update the docs/context files if the change affects future work
+
+For dissertation traceability, each meaningful feature slice should also add a short academic log under `docs/academic_logs/`.
 
 ## Prerequisites
 
@@ -151,7 +156,7 @@ These are important and should be treated as real backlog items:
 - automated tests exist only for a narrow CSV/dataset slice
 - automated tests are still narrow even after adding scan-input coverage
 - only two implemented rules
-- scan input is path-aware, but semantic/reference loading is still not MSBuild-accurate
+- scan input is now build-aware for project file selection, though metadata reference loading is still lighter than a full design-time build
 - no suppression or baseline system
 - AI training/export workflow needs stronger dataset hygiene
 - some context documentation in the repository is now outdated relative to the code
@@ -170,3 +175,4 @@ These are important and should be treated as real backlog items:
 - [docs/features/08-configuration-suppressions-and-baseline.md](docs/features/08-configuration-suppressions-and-baseline.md)
 - [docs/features/09-reporting-fingerprints-and-sarif-v2.md](docs/features/09-reporting-fingerprints-and-sarif-v2.md)
 - [docs/features/10-ai-dataset-and-confidence-pipeline-v2.md](docs/features/10-ai-dataset-and-confidence-pipeline-v2.md)
+- [docs/academic_logs/2026-04-22-feature-01-slice-2.md](docs/academic_logs/2026-04-22-feature-01-slice-2.md)
