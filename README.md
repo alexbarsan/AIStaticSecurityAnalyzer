@@ -32,7 +32,7 @@ The codebase is usable, but it is still in a prototype stage. The most important
 - `Analyzer.Reporting`
   - JSON, SARIF, and CSV export
 - `Analyzer.Tests`
-  - focused regression test runner for CSV workflow and scan-input behavior
+  - focused regression test runner for CSV workflow, scan-input behavior, and fixture-backed rule coverage
 - `TempForTests`
   - Ad-hoc sample input, not a real automated test project
 
