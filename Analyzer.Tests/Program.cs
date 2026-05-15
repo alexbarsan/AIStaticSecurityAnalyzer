@@ -19,6 +19,10 @@ internal static class Program
             ("train rejects single class labeled dataset", TrainRejectsSingleClassDataset),
             ("validator accepts valid labeled dataset", ValidatorAcceptsValidLabeledDataset),
             ("export-only runs skip the security gate unless fail-on is explicit", ExportOnlyRunsSkipGateByDefault),
+            ("weak hashing fixture positive sample is detected", WeakHashingFixturePositiveSampleIsDetected),
+            ("weak hashing fixture negative sample is not detected", WeakHashingFixtureNegativeSampleIsNotDetected),
+            ("hardcoded secret fixture positive sample is detected", HardcodedSecretFixturePositiveSampleIsDetected),
+            ("hardcoded secret fixture negative sample is not detected", HardcodedSecretFixtureNegativeSampleIsNotDetected),
             ("csproj input scans project files", CsprojInputScansProjectFiles),
             ("solution input scans all projects deterministically", SolutionInputScansProjectsDeterministically),
             ("project scanning excludes noise and generated files", ProjectScanningExcludesNoiseAndGeneratedFiles),
@@ -199,6 +203,42 @@ internal static class Program
 
         var exitCode = ExitCodePolicy.GetExitCode(Severity.Critical, Severity.High, skipGate: true);
         AssertEx.Equal(0, exitCode);
+    }
+
+    private static void WeakHashingFixturePositiveSampleIsDetected()
+    {
+        var findings = AnalyzeFixture("Rules/WeakHashing/Positive.cs").ToList();
+
+        AssertEx.Equal(1, findings.Count);
+        AssertEx.Equal("VULN-WEAK-HASHING", findings[0].Vulnerability.Id);
+        AssertEx.Equal("CWE-327", findings[0].Vulnerability.CWEId);
+        AssertEx.Equal(Severity.High, findings[0].Vulnerability.Severity);
+        AssertEx.Equal("MD5.Create()", findings[0].CodeSnippet);
+    }
+
+    private static void WeakHashingFixtureNegativeSampleIsNotDetected()
+    {
+        var findings = AnalyzeFixture("Rules/WeakHashing/Negative.cs").ToList();
+
+        AssertEx.Equal(0, findings.Count);
+    }
+
+    private static void HardcodedSecretFixturePositiveSampleIsDetected()
+    {
+        var findings = AnalyzeFixture("Rules/HardcodedSecret/Positive.cs").ToList();
+
+        AssertEx.Equal(1, findings.Count);
+        AssertEx.Equal("VULN-HARDCODED-SECRET", findings[0].Vulnerability.Id);
+        AssertEx.Equal("CWE-798", findings[0].Vulnerability.CWEId);
+        AssertEx.Equal(Severity.Critical, findings[0].Vulnerability.Severity);
+        AssertEx.Contains("Token", findings[0].CodeSnippet);
+    }
+
+    private static void HardcodedSecretFixtureNegativeSampleIsNotDetected()
+    {
+        var findings = AnalyzeFixture("Rules/HardcodedSecret/Negative.cs").ToList();
+
+        AssertEx.Equal(0, findings.Count);
     }
 
     private static void CsprojInputScansProjectFiles()
@@ -725,6 +765,38 @@ public class Secrets
     public string {{propertyName}} { get; } = "JhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc.123";
 }
 """;
+
+    private static IReadOnlyCollection<Finding> AnalyzeFixture(string relativeFixturePath)
+    {
+        var fixturePath = GetFixturePath(relativeFixturePath);
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var tempFixturePath = Path.Combine(tempDir, Path.GetFileName(fixturePath));
+            File.Copy(fixturePath, tempFixturePath, overwrite: true);
+
+            var analyzer = new RoslynCodeAnalyzer();
+            return analyzer.AnalyzeDirectory(tempFixturePath);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    private static string GetFixturePath(string relativeFixturePath)
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Analyzer.Tests", "Fixtures"));
+        var fixturePath = Path.Combine(root, relativeFixturePath.Replace('/', Path.DirectorySeparatorChar));
+
+        if (!File.Exists(fixturePath))
+        {
+            throw new FileNotFoundException($"Fixture was not found: {relativeFixturePath}", fixturePath);
+        }
+
+        return fixturePath;
+    }
 
     private static string RunCli(string analysisPath, out int exitCode)
     {

@@ -41,7 +41,7 @@ The codebase is usable, but it is still in a prototype stage. The most important
 This README reflects the current repository, not only the older context notes:
 
 - The projects currently target `net9.0`.
-- There is now a small automated test runner, but coverage is still narrow.
+- There is now a small automated test runner, and it includes fixture-backed rule coverage for the two implemented rules.
 - The scan engine now accepts directory, `.csproj`, and `.sln` paths with deterministic source-file ordering.
 - `.csproj` scanning now follows basic `ProjectReference` graphs and avoids cyclic duplication.
 - project scan scope is now derived from evaluated MSBuild `Compile` and `ProjectReference` items rather than only raw project XML parsing.

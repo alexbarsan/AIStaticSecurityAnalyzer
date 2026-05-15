@@ -89,7 +89,7 @@ These points are important because the earlier context file is ahead of the code
 ### What is true now
 
 - The solution currently targets `net9.0`, not `net8.0`.
-- There is a small dedicated automated test project, but coverage is still narrow.
+- There is a small dedicated automated test project, and it now includes fixture-backed rule tests for weak hashing and hardcoded secrets.
 - The scan engine now accepts directory, `.csproj`, and `.sln` inputs with deterministic file ordering, central exclusions, recursive project-reference traversal, and evaluated MSBuild compile-item discovery for project inputs.
 - The CLI scan path now renders and exports the same final post-AI/post-filter finding set.
 - Semantic references are still primarily based on trusted platform assemblies, but project scan scope is now derived from evaluated MSBuild items instead of raw project XML alone.
@@ -141,6 +141,7 @@ Detailed specs are in `docs/features/`.
 - Expand the current test runner into broader rule, CLI, and reporting coverage before adding several new rules.
 - Treat Feature 01 as complete for the current roadmap baseline.
 - If deeper build fidelity becomes necessary later, improve metadata/reference resolution before adding more semantically demanding rules.
+- Grow Feature 02 with reporting snapshots and CLI integration coverage before starting the taint-analysis backlog.
 - Keep extending project-aware scan behavior incrementally, but continue doing it test-first.
 - Add deterministic scan exclusions for `bin`, `obj`, `.git`, generated code, and report outputs.
 - Normalize model/property naming to remove avoidable dissertation noise.
